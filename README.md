@@ -1,4 +1,4 @@
-...tools for mapping python objects. Like these objects:
+...tools for mapping python classes. Like these classes:
 ```
 >>> class Penguin(object):
 ...     def __init__(self, name, mood):
@@ -17,7 +17,7 @@
 ...
 
 ```
-## Mapping objects to documents
+## Mapping classes to documents
 
 declaring mappings:
 ```
@@ -35,7 +35,7 @@ declaring mappings:
 ...     mapping_tools.Key('id'))
 
 ```
-encoding objects as documents and serializing documents as json:
+encoding classes as documents and serializing objects as json:
 ```
 >>> fred = Penguin('fred', 'cool')
 >>> betty = Goose('betty', fred)
@@ -54,3 +54,6 @@ decoding objects from json serialized documents:
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
+## Mapping classes to (other) aggregates
+## Mapping classes to relations
+## Mapping objects to relations
