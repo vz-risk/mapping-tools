@@ -1,5 +1,4 @@
-tools for mapping python objects
-## Mapping objects to documents
+...tools for mapping python objects. Like these objects:
 ```
 >>> class Penguin(object):
 ...     def __init__(self, name, mood):
@@ -18,6 +17,8 @@ tools for mapping python objects
 ...
 
 ```
+## Mapping objects to documents
+
 declaring mappings:
 ```
 >>> import mapping_tools
