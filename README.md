@@ -35,7 +35,7 @@ example, this domain model:
 ...     mapping_tools.Key('id'))
 
 ```
-#```
+```
 #>>> import mapping_tools
 #>>> document_strategy = mapping_tools.DocumentStrategy()
 #>>> document_strategy.add_mapping(Penguin, keys=('name', 'mood', 'id'))
@@ -43,7 +43,7 @@ example, this domain model:
 #...                               keys=('name', 'favorite_penguin', 'id'),
 #...                               value_types={'favorite_penguin':Penguin})
 #
-#```
+```
 encoding domain objects as document objects:
 ```
 >>> fred = Penguin('fred', 'cool')
@@ -55,12 +55,12 @@ encoding domain objects as document objects:
 '{"favorite_penguin": {"mood": "cool", "name": "fred"}, "name": "betty"}'
 
 ```
-#```
+```
 #>>> import json
 #>>> json.dumps(betty, cls=mapping_tools.document_encoder(goose_mapping),
 #>>>            sort_keys=True)
 
-#```
+```
 decoding domain objects from json serialized documents:
 ```
 >>> goose_doc = json.loads(
@@ -105,7 +105,8 @@ encoding, querying, and decoding domain objects as tuples
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
-mapping domain objects to aggregate tables
+## Mapping domain objects to aggregate tables
+```
 >>> goose_mv = Table('geese_mv', sql_metadata,
 ...                  Column('id', Integer, primary_key=True),
 ...                  Column('name', String(50)),
