@@ -1,4 +1,5 @@
-...tools for mapping python
+...tools for [mapping](http://martinfowler.com/eaaCatalog/dataMapper.html)
+ python
 [domain models](http://martinfowler.com/eaaCatalog/domainModel.html). For
 example, this domain model:
 ```
@@ -92,7 +93,8 @@ encoding, querying, and decoding domain objects as tuples
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
-mapping domain objects to aggregate tables
+## Mapping domain objects to aggregate tables
+```
 >>> goose_mv = Table('geese_mv', sql_metadata,
 ...                  Column('id', Integer, primary_key=True),
 ...                  Column('name', String(50)),
