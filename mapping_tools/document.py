@@ -1,13 +1,13 @@
 import json
 
-_mapper_registry = {}
+_model_to_mapper_registry = {}
 
 class Mapper(object):
     
     def __init__(self, model, document):
         self.document = document
         self.model = model
-        _mapper_registry[model] = self
+        _model_to_mapper_registry[model] = self
 
     def get_document(self):
         return self.document
@@ -17,7 +17,7 @@ class Mapper(object):
             nested_model = self.document.get_key(key_name).model
             if nested_model is not None:
                 nested_obj = dct[key_name]
-                nested_mapper = _mapper_registry[nested_model]
+                nested_mapper = _model_to_mapper_registry[nested_model]
                 dct[key_name] = nested_mapper.load(nested_obj)
     
         return self.model(**dct)
@@ -43,11 +43,10 @@ class Key:
 class JSONEncoder(json.JSONEncoder):
     def default(self, obj):
         kv = []
-        for key in _mapper_registry[obj.__class__].get_document():
+        for key in _model_to_mapper_registry[obj.__class__].get_document():
             try:
                 value = getattr(obj, key.name)
                 kv.append((key.name, value))
             except AttributeError:
                 pass
         return dict(kv)
-    
