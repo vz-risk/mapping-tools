@@ -23,6 +23,8 @@ example, this domain model:
 
 ```
 ## Mapping domain models to documents
+(TODO): here the document is aware of the domain model. Penguin replationship
+should be defined by the mapper not the document
 ```
 >>> from mapping_tools import document
 >>> penguin_doc_mapper = document.Mapper(
@@ -57,7 +59,7 @@ decoding domain objects from json serialized documents:
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
-## Mapping domain models to relations
+## Mapping domain models to relations (pure sqlalchemy)
 ```
 >>> import sqlalchemy
 >>> import sqlalchemy.orm
@@ -93,26 +95,40 @@ encoding, querying, and decoding domain objects as tuples
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
-## Mapping domain objects to aggregate tables
+## Mapping domain models to aggregate tables
 ```
+>>> from mapping_tools import table
 >>> goose_mv = Table('geese_mv', sql_metadata,
 ...                  Column('id', Integer, primary_key=True),
 ...                  Column('name', String(50)),
-...                  Column('favorite_penguin$id', Integer, primary_key=True),
+...                  Column('favorite_penguin$id', Integer),
 ...                  Column('favorite_penguin$name', String(50)),
 ...                  Column('favorite_penguin$mood', String(50)))
->>> goose_mv_map = sqlalchemy.orm.mapper(
-...                    Goose, goose_mv, non_primary=True, properties={
-...                    'favorite_penguin':sqlalchemy.orm.composite(Penguin,
-...                        goose_mv.c['favorite_penguin$name'],
-...                        goose_mv.c['favorite_penguin$mood'],
-...                        goose_mv.c['favorite_penguin$id'])})
+>>> goose_mv_map = table.Mapper(
+...                    Goose, goose_mv, properties={
+...                        'id':goose_mv.c.id,
+...                        'name':goose_mv.c.name,
+...                        'favorite_penguin': table.CompositeProperty(
+...                            Penguin, {
+...                            'name': goose_mv.c['favorite_penguin$name'],
+...                            'mood': goose_mv.c['favorite_penguin$mood'],
+...                            'id': goose_mv.c['favorite_penguin$id']})
+...                    })
 >>> sql_metadata.create_all(engine, (goose_mv,))
->>> #TODO: application side materialization
->>> r = engine.execute(goose_mv.insert().values((1, 'tom', 1, 'jerry', 'fat')))
->>> session.query(goose_mv_map).\
-...     filter(goose_mv.c['favorite_penguin$name']=='jerry').one()
-< betty, the goose that likes < fred the cool penguin > >
+
+```
+inserting and querying domain objects as aggregate tables:
+```
+>>> from sqlalchemy.sql import select
+>>> r = engine.execute(goose_mv_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
+>>> sorted((k,v) for k,v in r.last_inserted_params().items())\
+... # doctest: +NORMALIZE_WHITESPACE
+[('favorite_penguin$id', None), ('favorite_penguin$mood', 'fat'), 
+('favorite_penguin$name', 'jerry'), ('id', None), ('name', 'tom')]
+>>> select_jerry = select([goose_mv])\
+...                    .where(goose_mv.c['favorite_penguin$name']=='jerry')
+>>> goose_mv_map.load(engine.execute(select_jerry).first())
+< tom, the goose that likes < jerry the fat penguin > >
 
 ```
 ## Mapping domain models to (other) aggregates
