@@ -19,6 +19,8 @@ class Mapper:
 
     @staticmethod
     def _automap_unmapped_columns(table, properties):
+        #TODO: is this strategy more efficient than document.mapper._automap...
+        #TODO: can this be generalized with document.mapper._automap...
         automapped_properties = {}
         unmapped_column_names = set(table.columns.keys())
         for prop in properties.values():
@@ -50,6 +52,7 @@ class CompositeProperty:
         return columns
 
     def dump(self, obj):
+        #TODO: generalize this fn with DocumentProperty.dump
         row = {}
         for prop_name, prop in self.properties.items():
             value = getattr(obj, prop_name)
