@@ -1,52 +1,83 @@
 import json
 
-_model_to_mapper_registry = {}
-
 class Mapper(object):
     
-    def __init__(self, model, document):
-        self.document = document
-        self.model = model
-        _model_to_mapper_registry[model] = self
+    def __init__(self, model, document, properties):
+        #TODO: make _root member implicit
+        root = Member('_root', document)
+        self.document_property = DocumentProperty(model, root, properties)
 
-    def get_document(self):
-        return self.document
+    def dump(self, obj):
+        return self.document_property.dump(obj)['_root']
 
     def load(self, dct):
-        for key_name in dct:
-            nested_model = self.document.get_key(key_name).model
-            if nested_model is not None:
-                nested_obj = dct[key_name]
-                nested_mapper = _model_to_mapper_registry[nested_model]
-                dct[key_name] = nested_mapper.load(nested_obj)
-    
-        return self.model(**dct)
+        return self.document_property.load(dct)
 
 class Document:
 
-    def __init__(self, *keys):
-        self.keys = keys
-        self._key_names_to_key = dict([(key.name, key) for key in keys])
+    def __init__(self, *members):
+        self.members = dict((member.key, member) for member in members)
 
     def __iter__(self):
-        return iter(self.keys)
+        return iter(self.members.values())
 
-    def get_key(self, key_name):
-        return self._key_names_to_key[key_name]
+class Member:
 
-class Key:
-
-    def __init__(self, name, model=None):
-        self.name = name
-        self.model = model
+    def __init__(self, key, schema=None):
+        self.key = key
+        self.schema = schema
         
-class JSONEncoder(json.JSONEncoder):
+class MemberProperty:
+
+    def __init__(self, member):
+        self.member = member
+
+    def dump(self, obj):
+        return {self.member.key: obj}
+
+    def load(self, value):
+        return value
+
+class DocumentProperty:
+
+    def __init__(self, model, member, properties={}):
+        self.model = model
+        self.member = member
+        properties.update(
+            self._automap_unmapped_members(member.schema, properties))
+        self.properties = properties
+        self._key_to_propname = dict((prop.member.key, propname) 
+                                     for propname, prop 
+                                     in self.properties.items())
+
+    @staticmethod
+    def _automap_unmapped_members(document, properties):
+        automapped_properties = {}
+        for member in document:
+            if member.key not in properties:
+                automapped_properties[member.key] = MemberProperty(member)
+    
+        return automapped_properties
+
+    def dump(self, obj):
+        doc = {}
+        for prop_name, prop in self.properties.items():
+            value = getattr(obj, prop_name)
+            doc.update(prop.dump(value))
+
+        return {self.member.key: doc}
+
+    def load(self, dct):
+        for key, value in dct.items():
+            propname = self._key_to_propname[key]
+            dct[key] = self.properties[propname].load(value)
+    
+        return self.model(**dct)
+
+def json_encoder(document_mapper):
+    return type('JSONEncoder', (_JSONEncoder,), 
+                {'_document_mapper':document_mapper})
+
+class _JSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        kv = []
-        for key in _model_to_mapper_registry[obj.__class__].get_document():
-            try:
-                value = getattr(obj, key.name)
-                kv.append((key.name, value))
-            except AttributeError:
-                pass
-        return dict(kv)
+        return self._document_mapper.dump(obj)

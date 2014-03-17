@@ -23,20 +23,20 @@ example, this domain model:
 
 ```
 ## Mapping domain models to documents
-(TODO): here the document is aware of the domain model. Penguin replationship
-should be defined by the mapper not the document
 ```
 >>> from mapping_tools import document
->>> penguin_doc_mapper = document.Mapper(
-...     Penguin, document.Document(
-...         document.Key('name'),
-...         document.Key('mood'),
-...         document.Key('id')))
->>> goose_doc_mapper = document.Mapper(
-...     Goose, document.Document(
-...         document.Key('name'),
-...         document.Key('favorite_penguin', Penguin),
-...         document.Key('id')))
+>>> penguin_doc = document.Document(
+...                   document.Member('name'),
+...                   document.Member('mood'),
+...                   document.Member('id'))
+>>> goose_doc = document.Document(
+...                 document.Member('name'),
+...                 document.Member('favorite_penguin', penguin_doc),
+...                 document.Member('id'))
+>>> goose_doc_mapper = document.Mapper(Goose, goose_doc, {
+...                        'favorite_penguin':document.DocumentProperty(
+...                            Penguin, goose_doc.members['favorite_penguin'])
+...                    })
 
 ```
 encoding domain objects as document objects:
@@ -45,8 +45,8 @@ encoding domain objects as document objects:
 >>> betty = Goose('betty', fred)
 >>>
 >>> import json
->>> json.dumps(betty, cls=document.JSONEncoder, sort_keys=True)\
-... # doctest: +NORMALIZE_WHITESPACE
+>>> json.dumps(betty, cls=document.json_encoder(goose_doc_mapper),
+...     sort_keys=True) # doctest: +NORMALIZE_WHITESPACE
 '{"favorite_penguin": {"id": null, "mood": "cool", "name": "fred"},
   "id": null, "name": "betty"}'
 
@@ -77,7 +77,7 @@ decoding domain objects from json serialized documents:
 ...                            ForeignKey('penguins.id')))
 >>> penguin_relational_map = sqlalchemy.orm.mapper(Penguin, penguin_relation)
 >>> goose_relational_map = sqlalchemy.orm.mapper(
-...                            Goose, goose_relation, properties={
+...                            Goose, goose_relation, {
 ...                            'favorite_penguin':sqlalchemy.orm.relationship(
 ...                                Penguin)})
 
@@ -105,9 +105,7 @@ encoding, querying, and decoding domain objects as tuples
 ...                  Column('favorite_penguin$name', String(50)),
 ...                  Column('favorite_penguin$mood', String(50)))
 >>> goose_mv_map = table.Mapper(
-...                    Goose, goose_mv, properties={
-...                        'id':goose_mv.c.id,
-...                        'name':goose_mv.c.name,
+...                    Goose, goose_mv, {
 ...                        'favorite_penguin': table.CompositeProperty(
 ...                            Penguin, {
 ...                            'name': goose_mv.c['favorite_penguin$name'],
@@ -117,7 +115,7 @@ encoding, querying, and decoding domain objects as tuples
 >>> sql_metadata.create_all(engine, (goose_mv,))
 
 ```
-inserting and querying domain objects as aggregate tables:
+inserting and querying domain objects as aggregate rows:
 ```
 >>> from sqlalchemy.sql import select
 >>> r = engine.execute(goose_mv_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
