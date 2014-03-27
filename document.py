@@ -2,16 +2,28 @@ import json
 
 class Mapper(object):
     
-    def __init__(self, model, document, properties):
+    def __init__(self, model, document, metadata, properties):
         #TODO: make _root member implicit
         root = Member('_root', document)
         self.document_property = DocumentProperty(model, root, properties)
+        metadata.set_mapper(model, self)
 
     def dump(self, obj):
         return self.document_property.dump(obj)['_root']
 
     def load(self, dct):
         return self.document_property.load(dct)
+
+class MetaData: 
+    
+    _model_to_mapper = {}
+
+    def set_mapper(self, model, mapper):
+        self._model_to_mapper[model] = mapper
+
+    def get_mapper(self, obj):
+        model = obj.__class__
+        return self._model_to_mapper[model]
 
 class Document:
 
@@ -74,10 +86,15 @@ class DocumentProperty:
     
         return self.model(**dct)
 
-def json_encoder(document_mapper):
+def json_encoder(doc_metadata):
     return type('JSONEncoder', (_JSONEncoder,), 
-                {'_document_mapper':document_mapper})
+                {'_doc_metadata':doc_metadata})
 
 class _JSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        return self._document_mapper.dump(obj)
+        mapper = None
+        try:
+            mapper = self._doc_metadata.get_mapper(obj)
+        except ValueError: #obj not a mapped model
+            return obj
+        return mapper.dump(obj)

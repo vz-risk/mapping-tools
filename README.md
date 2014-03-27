@@ -22,7 +22,7 @@ example, this domain model:
 ...
 
 ```
-## Mapping domain models to documents
+An example mapping of the domain to a document:
 ```
 >>> from mapping_tools import document
 >>> penguin_doc = document.Document(
@@ -33,37 +33,42 @@ example, this domain model:
 ...                 document.Member('name'),
 ...                 document.Member('favorite_penguin', penguin_doc),
 ...                 document.Member('id'))
->>> goose_doc_mapper = document.Mapper(Goose, goose_doc, {
+>>> doc_metadata = document.MetaData()
+>>> goose_doc_mapper = document.Mapper(Goose, goose_doc, doc_metadata, {
 ...                        'favorite_penguin':document.DocumentProperty(
 ...                            Penguin, goose_doc.members['favorite_penguin'])
 ...                    })
 
 ```
-encoding domain objects as document objects:
+Mappers can be realized by encoders:
 ```
 >>> fred = Penguin('fred', 'cool')
 >>> betty = Goose('betty', fred)
 >>>
 >>> import json
->>> json.dumps(betty, cls=document.json_encoder(goose_doc_mapper),
+>>> json.dumps(betty, cls=document.json_encoder(doc_metadata),
 ...     sort_keys=True) # doctest: +NORMALIZE_WHITESPACE
 '{"favorite_penguin": {"id": null, "mood": "cool", "name": "fred"},
   "id": null, "name": "betty"}'
 
 ```
-decoding domain objects from json serialized documents:
+Encoders can be realized by repositories:
 ```
+#TODO
 >>> goose_doc_mapper.load(json.loads(
 ...   '{"favorite_penguin": {"mood": "cool", "name": "fred"}, "name": "betty"}'
 ... ))
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
-## Mapping domain models to relations (pure sqlalchemy)
+The mapping, and repository interfaces are consistent with pure sqlalchemy:
 ```
 >>> import sqlalchemy
 >>> import sqlalchemy.orm
 >>> from sqlalchemy import Table, Column, Integer, String, ForeignKey
+>>> from sqlalchemy import create_engine
+>>> from sqlalchemy.orm import sessionmaker
+>>> engine = create_engine('sqlite:///:memory:')
 >>> 
 >>> sql_metadata = sqlalchemy.MetaData()
 >>> penguin_relation = Table('penguins', sql_metadata,
@@ -80,13 +85,6 @@ decoding domain objects from json serialized documents:
 ...                            Goose, goose_relation, {
 ...                            'favorite_penguin':sqlalchemy.orm.relationship(
 ...                                Penguin)})
-
-```
-encoding, querying, and decoding domain objects as tuples
-```
->>> from sqlalchemy import create_engine
->>> from sqlalchemy.orm import sessionmaker
->>> engine = create_engine('sqlite:///:memory:')
 >>> sql_metadata.create_all(engine)
 >>> session = sessionmaker(bind=engine)()
 >>> session.add(Goose('betty', Penguin('fred', 'cool')))
@@ -95,8 +93,10 @@ encoding, querying, and decoding domain objects as tuples
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
-## Mapping domain models to aggregate tables
+An extension to the sqlalchemy query object enables mappings to aggregate
+tables:
 ```
+#TODO
 >>> from mapping_tools import table
 >>> goose_mv = Table('geese_mv', sql_metadata,
 ...                  Column('id', Integer, primary_key=True),
@@ -113,10 +113,6 @@ encoding, querying, and decoding domain objects as tuples
 ...                            'id': goose_mv.c['favorite_penguin$id']})
 ...                    })
 >>> sql_metadata.create_all(engine, (goose_mv,))
-
-```
-inserting and querying domain objects as aggregate rows:
-```
 >>> from sqlalchemy.sql import select
 >>> r = engine.execute(goose_mv_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
 >>> sorted((k,v) for k,v in r.last_inserted_params().items())\
@@ -129,5 +125,8 @@ inserting and querying domain objects as aggregate rows:
 < tom, the goose that likes < jerry the fat penguin > >
 
 ```
-## Mapping domain models to (other) aggregates
-## Mapping domain models to another domain
+TODO:
+- other repositories
+- mapping to other domains
+- mappings to other document schemas (json-schema.org)
+- xml encoder (xmltodict)
