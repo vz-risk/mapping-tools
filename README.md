@@ -46,8 +46,9 @@ Mappers can be realized by encoders:
 >>> betty = Goose('betty', fred)
 >>>
 >>> import json
->>> json.dumps(betty, cls=document.json_encoder(doc_metadata),
-...     sort_keys=True) # doctest: +NORMALIZE_WHITESPACE
+>>> JSONEncoder = make_JSONEncoder(doc_metadata)
+>>> json.dumps(betty, cls=JSONEncoder, sort_keys=True) \
+... # doctest: +NORMALIZE_WHITESPACE
 '{"favorite_penguin": {"id": null, "mood": "cool", "name": "fred"},
   "id": null, "name": "betty"}'
 
@@ -70,12 +71,12 @@ The mapping, and repository interfaces are consistent with pure sqlalchemy:
 >>> from sqlalchemy.orm import sessionmaker
 >>> engine = create_engine('sqlite:///:memory:')
 >>> 
->>> sql_metadata = sqlalchemy.MetaData()
->>> penguin_relation = Table('penguins', sql_metadata,
+>>> table_metadata = sqlalchemy.MetaData()
+>>> penguin_relation = Table('penguins', table_metadata,
 ...                          Column('id', Integer, primary_key=True),
 ...                          Column('name', String(50)),
 ...                          Column('mood', String(50)))
->>> goose_relation = Table('geese', sql_metadata,
+>>> goose_relation = Table('geese', table_metadata,
 ...                        Column('id', Integer, primary_key=True),
 ...                        Column('name', String(50)),
 ...                        Column('favorite_penguin$id', Integer,
@@ -85,7 +86,7 @@ The mapping, and repository interfaces are consistent with pure sqlalchemy:
 ...                            Goose, goose_relation, {
 ...                            'favorite_penguin':sqlalchemy.orm.relationship(
 ...                                Penguin)})
->>> sql_metadata.create_all(engine)
+>>> table_metadata.create_all(engine)
 >>> session = sessionmaker(bind=engine)()
 >>> session.add(Goose('betty', Penguin('fred', 'cool')))
 >>> session.commit()
@@ -98,7 +99,7 @@ tables:
 ```
 #TODO
 >>> from mapping_tools import table
->>> goose_mv = Table('geese_mv', sql_metadata,
+>>> goose_mv = Table('geese_mv', table_metadata,
 ...                  Column('id', Integer, primary_key=True),
 ...                  Column('name', String(50)),
 ...                  Column('favorite_penguin$id', Integer),
@@ -112,7 +113,7 @@ tables:
 ...                            'mood': goose_mv.c['favorite_penguin$mood'],
 ...                            'id': goose_mv.c['favorite_penguin$id']})
 ...                    })
->>> sql_metadata.create_all(engine, (goose_mv,))
+>>> table_metadata.create_all(engine, (goose_mv,))
 >>> from sqlalchemy.sql import select
 >>> r = engine.execute(goose_mv_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
 >>> sorted((k,v) for k,v in r.last_inserted_params().items())\
@@ -124,6 +125,20 @@ tables:
 >>> goose_mv_map.load(engine.execute(select_jerry).first())
 < tom, the goose that likes < jerry the fat penguin > >
 
+```
+sqlalchemy tables can be used by csv repositories. csv encoder interface is
+consistent with csv writer from python libs:
+```
+#tom = Goose('tom', Penguin('jerry', 'fat')),
+#betty = Goose('betty', Penguin('fred', 'cool')))
+#>>> writer = table.CSVWriter(mv_metadata)
+#>>> writer.writeheader()
+#>>> writer.writerows((tom, betty))
+```
+Extensions to the csv writer interface implement the mapping_tools repository
+interface:
+```
+#>>> writer.add_all((tom, betty))
 ```
 TODO:
 - other repositories
