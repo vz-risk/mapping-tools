@@ -2,4 +2,4 @@
 *.swp
 *.pyc
 data/*
-env
+*.egg-info
