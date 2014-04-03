@@ -28,16 +28,18 @@ example, this domain model:
 An example mapping of the domain to a document:
 ```
 >>> from mapping_tools import document
+>>> doc_metadata = document.MetaData()
 >>> penguin_doc = document.Document(
+...                   doc_metadata,
 ...                   document.Member('name'),
 ...                   document.Member('mood'),
 ...                   document.Member('id'))
 >>> goose_doc = document.Document(
+...                 doc_metadata,
 ...                 document.Member('name'),
 ...                 document.Member('favorite_penguin', penguin_doc),
 ...                 document.Member('id'))
->>> doc_metadata = document.MetaData()
->>> goose_doc_mapper = document.Mapper(Goose, goose_doc, doc_metadata, {
+>>> goose_doc_mapper = document.Mapper(Goose, goose_doc, {
 ...                        'favorite_penguin':document.DocumentProperty(
 ...                            Penguin, goose_doc.members['favorite_penguin'])
 ...                    })
@@ -49,7 +51,7 @@ Mappers can be realized by encoders:
 >>> betty = Goose('betty', fred)
 >>>
 >>> import json
->>> JSONEncoder = make_JSONEncoder(doc_metadata)
+>>> JSONEncoder = document.make_JSONEncoder(goose_doc_mapper)
 >>> json.dumps(betty, cls=JSONEncoder, sort_keys=True) \
 ... # doctest: +NORMALIZE_WHITESPACE
 '{"favorite_penguin": {"id": null, "mood": "cool", "name": "fred"},
@@ -100,9 +102,9 @@ The mapping, and repository interfaces are consistent with pure sqlalchemy:
 An extension to the sqlalchemy query object enables mappings to aggregate
 tables:
 ```
-#TODO
 >>> from mapping_tools import table
->>> goose_mv = Table('geese_mv', table_metadata,
+>>> mv_metadata = sqlalchemy.MetaData()
+>>> goose_mv = Table('geese_mv', mv_metadata,
 ...                  Column('id', Integer, primary_key=True),
 ...                  Column('name', String(50)),
 ...                  Column('favorite_penguin$id', Integer),
@@ -116,7 +118,7 @@ tables:
 ...                            'mood': goose_mv.c['favorite_penguin$mood'],
 ...                            'id': goose_mv.c['favorite_penguin$id']})
 ...                    })
->>> table_metadata.create_all(engine, (goose_mv,))
+>>> mv_metadata.create_all(engine)
 >>> from sqlalchemy.sql import select
 >>> r = engine.execute(goose_mv_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
 >>> sorted((k,v) for k,v in r.last_inserted_params().items())\
@@ -132,10 +134,11 @@ tables:
 sqlalchemy tables can be used by csv repositories. csv encoder interface is
 consistent with csv writer from python libs:
 ```
-#tom = Goose('tom', Penguin('jerry', 'fat')),
-#betty = Goose('betty', Penguin('fred', 'cool')))
-#>>> writer = table.CSVWriter(mv_metadata)
-#>>> writer.writeheader()
+tom = Goose('tom', Penguin('jerry', 'fat')),
+betty = Goose('betty', Penguin('fred', 'cool')))
+>>> writer = table.CSVWriter(mv_metadata)
+>>> writer.writeheader(Goose)
+
 #>>> writer.writerows((tom, betty))
 ```
 Extensions to the csv writer interface implement the mapping_tools repository

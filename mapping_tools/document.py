@@ -2,11 +2,10 @@ import json
 
 class Mapper(object):
     
-    def __init__(self, model, document, metadata, properties):
+    def __init__(self, model, document, properties):
         #TODO: make _root member implicit
         root = Member('_root', document)
         self.document_property = DocumentProperty(model, root, properties)
-        metadata.set_mapper(model, self)
 
     def dump(self, obj):
         return self.document_property.dump(obj)['_root']
@@ -16,18 +15,12 @@ class Mapper(object):
 
 class MetaData: 
     
-    _model_to_mapper = {}
-
-    def set_mapper(self, model, mapper):
-        self._model_to_mapper[model] = mapper
-
-    def get_mapper(self, obj):
-        model = obj.__class__
-        return self._model_to_mapper[model]
+    documents = set()
 
 class Document:
 
-    def __init__(self, *members):
+    def __init__(self, metadata, *members):
+        metadata.documents.add(self)
         self.members = dict((member.key, member) for member in members)
 
     def __iter__(self):
@@ -35,6 +28,7 @@ class Document:
 
 class Member:
 
+    #TODO: should the schema be explicitly defined here, or by the mapper
     def __init__(self, key, schema=None):
         self.key = key
         self.schema = schema
@@ -86,15 +80,11 @@ class DocumentProperty:
     
         return self.model(**dct)
 
-def json_encoder(doc_metadata):
+#TODO: dump and load should be implemented by the encoder, not the property
+def make_JSONEncoder(mapper):
     return type('JSONEncoder', (_JSONEncoder,), 
-                {'_doc_metadata':doc_metadata})
+                {'_mapper':mapper})
 
 class _JSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        mapper = None
-        try:
-            mapper = self._doc_metadata.get_mapper(obj)
-        except ValueError: #obj not a mapped model
-            return obj
-        return mapper.dump(obj)
+        return self._mapper.dump(obj)
