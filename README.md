@@ -99,8 +99,7 @@ The mapping, and repository interfaces are consistent with pure sqlalchemy:
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
-An extension to the sqlalchemy query object enables mappings to aggregate
-tables:
+Map a model to an aggregate table:
 ```
 >>> from mapping_tools import table
 >>> mv_metadata = sqlalchemy.MetaData()
@@ -131,23 +130,27 @@ tables:
 < tom, the goose that likes < jerry the fat penguin > >
 
 ```
-sqlalchemy tables can be used by csv repositories. csv encoder interface is
+table mappers can be used by csv repositories. csv repository interface is
 consistent with csv writer from python libs:
 ```
-tom = Goose('tom', Penguin('jerry', 'fat')),
-betty = Goose('betty', Penguin('fred', 'cool')))
->>> writer = table.CSVWriter(mv_metadata)
->>> writer.writeheader(Goose)
+>>> writer = table.CSVWriter(goose_mv_map)
+>>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
+favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
+>>> writer.writerows((Goose('tom', Penguin('jerry', 'fat')),
+...                   Goose('betty', Penguin('fred', 'cool'))))\
+... # doctest: +NORMALIZE_WHITESPACE
+,fat,jerry,,tom
+,cool,fred,,betty
 
-#>>> writer.writerows((tom, betty))
 ```
 Extensions to the csv writer interface implement the mapping_tools repository
 interface:
 ```
-#>>> writer.add_all((tom, betty))
+>>> writer.add_all((tom, betty))
 ```
 TODO:
 - other repositories
 - mapping to other domains
 - mappings to other document schemas (json-schema.org)
 - xml encoder (xmltodict)
+- sqla query subclass that chooses best mapper

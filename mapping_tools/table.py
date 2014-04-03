@@ -1,3 +1,6 @@
+import csv 
+import sys
+
 from sqlalchemy.schema import Column
 
 #TODO: where does this go?
@@ -17,6 +20,10 @@ class Mapper:
         properties.update(self._automap_unmapped_columns(table, properties))
         self.composite_property = CompositeProperty(model, properties)
 
+    @property
+    def columns(self):
+        return self.composite_property.columns
+
     @staticmethod
     def _automap_unmapped_columns(table, properties):
         automapped_properties = {}
@@ -32,6 +39,7 @@ class Mapper:
         return self.composite_property.load(row)
 
     def dump(self, obj):
+        #TODO: this shouldn't be sql coupled
         return self.table.insert().values(self.composite_property.dump(obj))
 
 class CompositeProperty:
@@ -78,3 +86,18 @@ class ColumnProperty:
 
     def load(self, row):
         return row[self.column]
+
+class CSVWriter:
+
+    def __init__(self, mapper):
+        self.mapper = mapper
+        header = sorted([column.key for column in self.mapper.columns]) 
+        self.writer = csv.DictWriter(sys.stdout, header)
+
+    def writeheader(self):
+        self.writer.writeheader()
+
+    def writerows(self, iterable):
+        for obj in iterable:
+            row = self.mapper.composite_property.dump(obj)
+            self.writer.writerow(row)
