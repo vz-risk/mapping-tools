@@ -101,3 +101,6 @@ class CSVWriter:
         for obj in iterable:
             row = self.mapper.composite_property.dump(obj)
             self.writer.writerow(row)
+
+    def add_all(self, iterable):
+        self.writerows(iterable)
