@@ -124,6 +124,7 @@ Encoders can be realized by repositories:
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
+```
 >>> mv_metadata.create_all(engine)
 >>> from sqlalchemy.sql import select
 >>> r = engine.execute(goose_mv_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
