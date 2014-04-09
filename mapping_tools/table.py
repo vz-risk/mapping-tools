@@ -1,6 +1,3 @@
-import csv 
-import sys
-
 from sqlalchemy.schema import Column
 
 #TODO: where does this go?
@@ -87,17 +84,3 @@ class ColumnProperty:
     def load(self, row):
         return row[self.column]
 
-class CSVWriter:
-
-    def __init__(self, mapper):
-        self.mapper = mapper
-        header = sorted([column.key for column in self.mapper.columns]) 
-        self.writer = csv.DictWriter(sys.stdout, header)
-
-    def writeheader(self):
-        self.writer.writeheader()
-
-    def writerows(self, iterable):
-        for obj in iterable:
-            row = self.mapper.composite_property.dump(obj)
-            self.writer.writerow(row)

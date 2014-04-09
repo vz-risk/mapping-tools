@@ -133,7 +133,8 @@ Map a model to an aggregate table:
 table mappers can be used by csv repositories. csv repository interface is
 consistent with csv writer from python libs:
 ```
->>> writer = table.CSVWriter(goose_mv_map)
+>>> import mapping_tools.repositories.csv_writer
+>>> writer = mapping_tools.repositories.csv_writer.CSVWriter(goose_mv_map)
 >>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
 favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
 >>> writer.writerows((Goose('tom', Penguin('jerry', 'fat')),
