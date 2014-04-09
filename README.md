@@ -25,6 +25,7 @@ example, this domain model:
 ...
 
 ```
+## Mappers
 An example mapping of the domain to a document:
 ```
 >>> from mapping_tools import document
@@ -45,37 +46,11 @@ An example mapping of the domain to a document:
 ...                    })
 
 ```
-Mappers can be realized by encoders:
-```
->>> fred = Penguin('fred', 'cool')
->>> betty = Goose('betty', fred)
->>>
->>> import json
->>> JSONEncoder = document.make_JSONEncoder(goose_doc_mapper)
->>> json.dumps(betty, cls=JSONEncoder, sort_keys=True) \
-... # doctest: +NORMALIZE_WHITESPACE
-'{"favorite_penguin": {"id": null, "mood": "cool", "name": "fred"},
-  "id": null, "name": "betty"}'
-
-```
-Encoders can be realized by repositories:
-```
-#TODO
->>> goose_doc_mapper.load(json.loads(
-...   '{"favorite_penguin": {"mood": "cool", "name": "fred"}, "name": "betty"}'
-... ))
-< betty, the goose that likes < fred the cool penguin > >
-
-```
-The mapping, and repository interfaces are consistent with pure sqlalchemy:
+ORM using pure SQLAlchemy:
 ```
 >>> import sqlalchemy
 >>> import sqlalchemy.orm
 >>> from sqlalchemy import Table, Column, Integer, String, ForeignKey
->>> from sqlalchemy import create_engine
->>> from sqlalchemy.orm import sessionmaker
->>> engine = create_engine('sqlite:///:memory:')
->>> 
 >>> table_metadata = sqlalchemy.MetaData()
 >>> penguin_relation = Table('penguins', table_metadata,
 ...                          Column('id', Integer, primary_key=True),
@@ -91,12 +66,6 @@ The mapping, and repository interfaces are consistent with pure sqlalchemy:
 ...                            Goose, goose_relation, {
 ...                            'favorite_penguin':sqlalchemy.orm.relationship(
 ...                                Penguin)})
->>> table_metadata.create_all(engine)
->>> session = sessionmaker(bind=engine)()
->>> session.add(Goose('betty', Penguin('fred', 'cool')))
->>> session.commit()
->>> session.query(Goose).join(Penguin).filter(Penguin.name=='fred').one()
-< betty, the goose that likes < fred the cool penguin > >
 
 ```
 Map a model to an aggregate table:
@@ -117,6 +86,44 @@ Map a model to an aggregate table:
 ...                            'mood': goose_mv.c['favorite_penguin$mood'],
 ...                            'id': goose_mv.c['favorite_penguin$id']})
 ...                    })
+
+```
+## Encoders
+Mappers can be realized by encoders:
+```
+>>> grace = Goose('grace', Penguin('jerry', 'fat'))
+>>> betty = Goose('betty', Penguin('fred', 'cool'))
+>>> ginger = Goose('ginger', Penguin('larry', 'boring'))
+
+```
+```
+>>> import json
+>>> JSONEncoder = document.make_JSONEncoder(goose_doc_mapper)
+>>> json.dumps(betty, cls=JSONEncoder, sort_keys=True) \
+... # doctest: +NORMALIZE_WHITESPACE
+'{"favorite_penguin": {"id": null, "mood": "cool", "name": "fred"},
+  "id": null, "name": "betty"}'
+>>> goose_doc_mapper.load(json.loads(
+...   '{"favorite_penguin": {"mood": "cool", "name": "fred"}, "name": "betty"}'
+... ))
+< betty, the goose that likes < fred the cool penguin > >
+
+```
+## Repositories
+Encoders can be realized by repositories:
+```
+>>> from sqlalchemy import create_engine
+>>> from sqlalchemy.orm import sessionmaker
+>>> engine = create_engine('sqlite:///:memory:')
+>>> 
+>>> table_metadata.create_all(engine)
+>>> session = sessionmaker(bind=engine)()
+>>> session.add(Goose('betty', Penguin('fred', 'cool')))
+>>> session.commit()
+>>> session.query(Goose).join(Penguin).filter(Penguin.name=='fred').one()
+< betty, the goose that likes < fred the cool penguin > >
+
+```
 >>> mv_metadata.create_all(engine)
 >>> from sqlalchemy.sql import select
 >>> r = engine.execute(goose_mv_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
@@ -134,21 +141,19 @@ table mappers can be used by csv repositories. csv repository interface is
 consistent with csv writer from python libs:
 ```
 >>> import mapping_tools.repositories.csv_writer
->>> tom = Goose('tom', Penguin('jerry', 'fat'))
->>> betty = Goose('betty', Penguin('fred', 'cool'))
 >>> writer = mapping_tools.repositories.csv_writer.CSVWriter(goose_mv_map)
 >>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
 favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
->>> writer.writerows((tom, betty)) # doctest: +NORMALIZE_WHITESPACE
-,fat,jerry,,tom
+>>> writer.writerows((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
+,fat,jerry,,grace
 ,cool,fred,,betty
 
 ```
 Extensions to the csv writer interface implement the mapping_tools repository
 interface:
 ```
->>> writer.add_all((tom, betty)) # doctest: +NORMALIZE_WHITESPACE
-,fat,jerry,,tom
+>>> writer.add_all((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
+,fat,jerry,,grace
 ,cool,fred,,betty
 
 ```
