@@ -134,12 +134,12 @@ table mappers can be used by csv repositories. csv repository interface is
 consistent with csv writer from python libs:
 ```
 >>> import mapping_tools.repositories.csv_writer
+>>> tom = Goose('tom', Penguin('jerry', 'fat'))
+>>> betty = Goose('betty', Penguin('fred', 'cool'))
 >>> writer = mapping_tools.repositories.csv_writer.CSVWriter(goose_mv_map)
 >>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
 favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
->>> writer.writerows((Goose('tom', Penguin('jerry', 'fat')),
-...                   Goose('betty', Penguin('fred', 'cool'))))\
-... # doctest: +NORMALIZE_WHITESPACE
+>>> writer.writerows((tom, betty)) # doctest: +NORMALIZE_WHITESPACE
 ,fat,jerry,,tom
 ,cool,fred,,betty
 
@@ -147,7 +147,10 @@ favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
 Extensions to the csv writer interface implement the mapping_tools repository
 interface:
 ```
->>> writer.add_all((tom, betty))
+>>> writer.add_all((tom, betty)) # doctest: +NORMALIZE_WHITESPACE
+,fat,jerry,,tom
+,cool,fred,,betty
+
 ```
 TODO:
 - other repositories
