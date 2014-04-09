@@ -1,5 +1,5 @@
 ```
-pip install git+https://github.com/natb1/mapping_tools.git
+pip install git+ssh://git@github.com/natb1/mapping_tools.git
 ```
 ...tools for [mapping](http://martinfowler.com/eaaCatalog/dataMapper.html)
  python
