@@ -1,7 +1,7 @@
 import csv 
 import sys
 
-class CSVWriter:
+class CSVWriter(object):
 
     def __init__(self, mapper):
         self.mapper = mapper
