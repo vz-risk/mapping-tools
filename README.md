@@ -70,22 +70,22 @@ ORM using pure SQLAlchemy:
 ```
 Map a model to an aggregate table:
 ```
->>> from mapping_tools import table
->>> mv_metadata = sqlalchemy.MetaData()
->>> goose_mv = Table('geese_mv', mv_metadata,
+>>> import mapping_tools.mappers.table
+>>> aggregate_metadata = sqlalchemy.MetaData()
+>>> goose_aggregate = Table('geese_aggregate', aggregate_metadata,
 ...                  Column('id', Integer, primary_key=True),
 ...                  Column('name', String(50)),
 ...                  Column('favorite_penguin$id', Integer),
 ...                  Column('favorite_penguin$name', String(50)),
 ...                  Column('favorite_penguin$mood', String(50)))
->>> goose_mv_map = table.Mapper(
-...                    Goose, goose_mv, {
-...                        'favorite_penguin': table.CompositeProperty(
-...                            Penguin, {
-...                            'name': goose_mv.c['favorite_penguin$name'],
-...                            'mood': goose_mv.c['favorite_penguin$mood'],
-...                            'id': goose_mv.c['favorite_penguin$id']})
-...                    })
+>>> goose_aggregate_map = mapping_tools.mappers.table.Mapper(
+...     Goose, goose_aggregate, {
+...         'favorite_penguin': mapping_tools.mappers.table.CompositeProperty(
+...             Penguin, {
+...             'name': goose_aggregate.c['favorite_penguin$name'],
+...             'mood': goose_aggregate.c['favorite_penguin$mood'],
+...             'id': goose_aggregate.c['favorite_penguin$id']})
+...     })
 
 ```
 ## Encoders
@@ -125,16 +125,16 @@ Encoders can be realized by repositories:
 
 ```
 ```
->>> mv_metadata.create_all(engine)
+>>> aggregate_metadata.create_all(engine)
 >>> from sqlalchemy.sql import select
->>> r = engine.execute(goose_mv_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
+>>> r = engine.execute(goose_aggregate_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
 >>> sorted((k,v) for k,v in r.last_inserted_params().items())\
 ... # doctest: +NORMALIZE_WHITESPACE
 [('favorite_penguin$id', None), ('favorite_penguin$mood', 'fat'), 
 ('favorite_penguin$name', 'jerry'), ('id', None), ('name', 'tom')]
->>> select_jerry = select([goose_mv])\
-...                    .where(goose_mv.c['favorite_penguin$name']=='jerry')
->>> goose_mv_map.load(engine.execute(select_jerry).first())
+>>> select_jerry = select([goose_aggregate])\
+...                    .where(goose_aggregate.c['favorite_penguin$name']=='jerry')
+>>> goose_aggregate_map.load(engine.execute(select_jerry).first())
 < tom, the goose that likes < jerry the fat penguin > >
 
 ```
@@ -142,7 +142,8 @@ table mappers can be used by csv repositories. csv repository interface is
 consistent with csv writer from python libs:
 ```
 >>> import mapping_tools.repositories.csv_writer
->>> writer = mapping_tools.repositories.csv_writer.CSVWriter(goose_mv_map)
+>>> writer = mapping_tools.repositories.csv_writer.CSVWriter(
+...     goose_aggregate_map)
 >>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
 favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
 >>> writer.writerows((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
