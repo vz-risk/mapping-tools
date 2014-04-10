@@ -89,7 +89,7 @@ Map a model to an aggregate table:
 
 ```
 ## Encoders
-Mappers can be realized by encoders:
+Mappers can be used by encoders:
 ```
 >>> grace = Goose('grace', Penguin('jerry', 'fat'))
 >>> betty = Goose('betty', Penguin('fred', 'cool'))
@@ -110,7 +110,7 @@ Mappers can be realized by encoders:
 
 ```
 ## Repositories
-Encoders can be realized by repositories:
+Encoders can be used by repositories:
 ```
 >>> from sqlalchemy import create_engine
 >>> from sqlalchemy.orm import sessionmaker
