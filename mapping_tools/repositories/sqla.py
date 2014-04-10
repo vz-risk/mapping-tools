@@ -29,6 +29,10 @@ class AggregateSessionAdaptor:
     def __exit__(self, exc_type, exc_value, traceback):
         self.connection.close()
 
+    def add_all(iterable):
+        self.connection.execute(self.mapping.table.insert(),
+                                [mapping.dump(obj) for obj in iterable])
+
     def query(self, model, criteria):
         where_clause = self._parse_where_clause(model, criteria)
         criteria_select = select([self.mapping.table]).where(where_clause)
