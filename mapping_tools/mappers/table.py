@@ -42,8 +42,7 @@ class Mapper:
         return self.composite_property.load(row)
 
     def dump(self, obj):
-        #TODO: this shouldn't be sql coupled
-        return self.table.insert().values(self.composite_property.dump(obj))
+        return self.composite_property.dump(obj)
 
 class CompositeProperty:
 
