@@ -12,13 +12,19 @@ def _cast_columns_as_properties(properties):
 class Mapper:
 
     def __init__(self, model, table, properties):
-        self.table = table
+        self._table = table
         properties.update(_cast_columns_as_properties(properties))
         properties.update(self._automap_unmapped_columns(table, properties))
         self.composite_property = CompositeProperty(model, properties)
 
     @property
+    def table(self):
+        return self._table
+
+    @property
     def columns(self):
+        #TODO: if this is returning sqla columns, it should probably use the
+        #table interface instead
         return self.composite_property.columns
 
     @staticmethod
