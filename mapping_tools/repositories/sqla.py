@@ -31,15 +31,15 @@ class AggregateSessionAdaptor:
 
     def query(self, model, criteria):
         where_clause = self._parse_where_clause(model, criteria)
-        criteria_select = select(self.mapping.table).where(where_clause)
+        criteria_select = select([self.mapping.table]).where(where_clause)
         results = self.connection.execute(criteria_select)
         return results
 
-    def _parse_where_clause(model, criteria):
+    def _parse_where_clause(self, model, criteria):
         #TODO: assumes And conjuction
         conjuction = []
         for cri in criteria:
-            path = cri['path'].join('$')
+            path = '$'.join(cri['path'])
             if cri['operator'] == 'in':
                 conjuction.append(self.mapping.table.c[path].in_(cri['value']))
             elif cri['operator'] == 'not in':
@@ -49,7 +49,7 @@ class AggregateSessionAdaptor:
                 conjuction.append(self.mapping.table.c[path] >= cri['value'])
             elif cri['operator'] == '<':
                 conjuction.append(self.mapping.table.c[path] < cri['value'])
-        return and_(conjuction)
+        return and_(*conjuction)
 
 class RelationalSessionAdaptor:
 
