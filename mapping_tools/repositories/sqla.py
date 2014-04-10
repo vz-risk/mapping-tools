@@ -29,7 +29,7 @@ class AggregateSessionAdaptor:
     def __exit__(self, exc_type, exc_value, traceback):
         self.connection.close()
 
-    def add_all(iterable):
+    def add_all(self, iterable):
         self.connection.execute(self.mapping.table.insert(),
                                 [mapping.dump(obj) for obj in iterable])
 
