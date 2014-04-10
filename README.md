@@ -109,9 +109,32 @@ Mappers can be used by encoders:
 < betty, the goose that likes < fred the cool penguin > >
 
 ```
-## Repositories
-Encoders can be used by repositories:
+Table mappings can be used by csv encoders. csv encoder interface is
+consistent with csv writer from python libs:
 ```
+>>> import mapping_tools.repositories.csv_writer
+>>> writer = mapping_tools.repositories.csv_writer.CSVWriter(
+...     goose_aggregate_map)
+>>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
+favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
+>>> writer.writerows((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
+,fat,jerry,,grace
+,cool,fred,,betty
+
+```
+Extensions to the csv writer interface implement the mapping_tools encoder
+interface:
+```
+>>> writer.add_all((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
+,fat,jerry,,grace
+,cool,fred,,betty
+
+```
+## Repositories
+Repositories are encoders that also implement persistance and querying
+strategies:
+```
+#TODO
 >>> from sqlalchemy import create_engine
 >>> from sqlalchemy.orm import sessionmaker
 >>> engine = create_engine('sqlite:///:memory:')
@@ -125,38 +148,19 @@ Encoders can be used by repositories:
 
 ```
 ```
+#TODO
 >>> aggregate_metadata.create_all(engine)
 >>> from sqlalchemy.sql import select
->>> r = engine.execute(goose_aggregate_map.dump(Goose('tom', Penguin('jerry', 'fat'))))
+>>> r = engine.execute(goose_aggregate_map.table.insert(), 
+...                    **goose_aggregate_map.dump(grace))
 >>> sorted((k,v) for k,v in r.last_inserted_params().items())\
 ... # doctest: +NORMALIZE_WHITESPACE
-[('favorite_penguin$id', None), ('favorite_penguin$mood', 'fat'), 
-('favorite_penguin$name', 'jerry'), ('id', None), ('name', 'tom')]
+[('favorite_penguin$id', None), ('favorite_penguin$mood', 'fat'),
+('favorite_penguin$name', 'jerry'), ('id', None), ('name', 'grace')]
 >>> select_jerry = select([goose_aggregate])\
 ...                    .where(goose_aggregate.c['favorite_penguin$name']=='jerry')
 >>> goose_aggregate_map.load(engine.execute(select_jerry).first())
-< tom, the goose that likes < jerry the fat penguin > >
-
-```
-table mappers can be used by csv repositories. csv repository interface is
-consistent with csv writer from python libs:
-```
->>> import mapping_tools.repositories.csv_writer
->>> writer = mapping_tools.repositories.csv_writer.CSVWriter(
-...     goose_aggregate_map)
->>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
-favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
->>> writer.writerows((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
-,fat,jerry,,grace
-,cool,fred,,betty
-
-```
-Extensions to the csv writer interface implement the mapping_tools repository
-interface:
-```
->>> writer.add_all((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
-,fat,jerry,,grace
-,cool,fred,,betty
+< grace, the goose that likes < jerry the fat penguin > >
 
 ```
 TODO:
