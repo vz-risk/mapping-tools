@@ -3,7 +3,7 @@ class And:
     _criteria = []
 
     def add(self, path, value, operator='in'):
-        if isinstanve(path, basestring):
+        if isinstance(path, basestring):
             path = (path,)
         self._criteria.append(
             {'value':value, 'path':path, 'operator':operator})
