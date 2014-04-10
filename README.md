@@ -112,8 +112,8 @@ Mappers can be used by encoders:
 Table mappings can be used by csv encoders. csv encoder interface is
 consistent with csv writer from python libs:
 ```
->>> import mapping_tools.repositories.csv_writer
->>> writer = mapping_tools.repositories.csv_writer.CSVWriter(
+>>> import mapping_tools.encoders.csv_writer
+>>> writer = mapping_tools.encoders.csv_writer.CSVWriter(
 ...     goose_aggregate_map)
 >>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
 favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
