@@ -6,7 +6,7 @@ class And:
         if isinstanve(path, basestring):
             path = (path,)
         self._criteria.append(
-            {'value':value, 'path':path, 'operator'=operator})
+            {'value':value, 'path':path, 'operator':operator})
 
     def __iter__(self):
         return iter(self._criteria)
