@@ -23,9 +23,14 @@ class AggregateSessionAdaptor:
 
     def __enter__(self):
         self.connection = self.engine.connect()
+        self.transaction = self.connection.begin()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        if exc_type is None:
+            self.transaction.commit()
+        else:
+            self.transaction.rollback()
         self.connection.close()
 
     def add_all(self, iterable):
