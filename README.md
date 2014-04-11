@@ -125,7 +125,11 @@ favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
 Extensions to the csv writer interface implement the mapping_tools encoder
 interface:
 ```
->>> writer.add_all((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
+>>> with writer.make_session() as session:
+...     session.add_all((grace, betty)) 
+...     # doctest: +NORMALIZE_WHITESPACE
+...
+favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
 ,fat,jerry,,grace
 ,cool,fred,,betty
 
