@@ -6,9 +6,8 @@ from sqlalchemy.sql import select, and_
 
 class SQLAlchemy(object):
 
-    def __init__(self, mapping):
+    def __init__(self, mapping, engine_url):
         #TODO: choose either relational or aggregate mapping
-        engine_url = 'sqlite:///:memory:'
         self.engine = create_engine(engine_url)
         #self.sessionmaker = sessionmaker(bind=engine)
         self.mapping = mapping
@@ -30,8 +29,9 @@ class AggregateSessionAdaptor:
         self.connection.close()
 
     def add_all(self, iterable):
-        self.connection.execute(self.mapping.table.insert(),
-                                [mapping.dump(obj) for obj in iterable])
+        if len(iterable) > 0:
+            self.connection.execute(self.mapping.table.insert(),
+                                    [mapping.dump(obj) for obj in iterable])
 
     def query(self, model, criteria):
         where_clause = self._parse_where_clause(model, criteria)
