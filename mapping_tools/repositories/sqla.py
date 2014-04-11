@@ -42,7 +42,7 @@ class AggregateSessionAdaptor:
     def query(self, model, criteria):
         where_clause = self._parse_where_clause(model, criteria)
         criteria_select = select([self.mapping.table]).where(where_clause)
-        results = self.connection.execute(criteria_select)
+        results = _dict_results(self.connection.execute(criteria_select))
         return results
 
     def _parse_where_clause(self, model, criteria):
@@ -60,6 +60,10 @@ class AggregateSessionAdaptor:
             elif cri['operator'] == '<':
                 conjuction.append(self.mapping.table.c[path] < cri['value'])
         return and_(*conjuction)
+
+def _dict_results(resultproxy):
+    for row in resultproxy:
+        yield dict(zip(row.keys(), row))
 
 class RelationalSessionAdaptor:
 
