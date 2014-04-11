@@ -76,16 +76,18 @@ class CompositeProperty:
 
 class ColumnProperty:
 
-    def __init__(self, column):
-        self.column = column
+    def __init__(self, *columns):
+        self._columns = columns
 
     @property
     def columns(self):
-        return (self.column,)
+        return self._columns
 
     def dump(self, value):
-        return {self.column.name:value}
+        data = dict((col.name, value) for col in self.columns)
+        return data
 
     def load(self, row):
-        return row[self.column]
+        '''load the value of the first column'''
+        return row[self.columns[0]]
 
