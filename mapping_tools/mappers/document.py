@@ -1,3 +1,4 @@
+import datetime
 import json
 
 class Mapper(object):
@@ -46,7 +47,9 @@ class MemberProperty:
 
 class DocumentProperty:
 
-    def __init__(self, model, member, properties={}):
+    def __init__(self, model, member, properties=None):
+        if properties is None:
+            properties = {}
         self.model = model
         self.member = member
         properties.update(
@@ -87,4 +90,7 @@ def make_JSONEncoder(mapper):
 
 class _JSONEncoder(json.JSONEncoder):
     def default(self, obj):
-        return self._mapper.dump(obj)
+        if isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        else: #TODO: assumes a model. can lead to confusing errors
+            return self._mapper.dump(obj)

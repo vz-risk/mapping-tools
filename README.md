@@ -28,22 +28,22 @@ example, this domain model:
 ## Mappers
 An example mapping of the domain to a document:
 ```
->>> from mapping_tools import document
->>> doc_metadata = document.MetaData()
->>> penguin_doc = document.Document(
+>>> import mapping_tools.mappers.document
+>>> doc_metadata = mapping_tools.mappers.document.MetaData()
+>>> penguin_doc = mapping_tools.mappers.document.Document(
 ...                   doc_metadata,
-...                   document.Member('name'),
-...                   document.Member('mood'),
-...                   document.Member('id'))
->>> goose_doc = document.Document(
+...                   mapping_tools.mappers.document.Member('name'),
+...                   mapping_tools.mappers.document.Member('mood'),
+...                   mapping_tools.mappers.document.Member('id'))
+>>> goose_doc = mapping_tools.mappers.document.Document(
 ...                 doc_metadata,
-...                 document.Member('name'),
-...                 document.Member('favorite_penguin', penguin_doc),
-...                 document.Member('id'))
->>> goose_doc_mapper = document.Mapper(Goose, goose_doc, {
-...                        'favorite_penguin':document.DocumentProperty(
-...                            Penguin, goose_doc.members['favorite_penguin'])
-...                    })
+...                 mapping_tools.mappers.document.Member('name'),
+...                 mapping_tools.mappers.document.Member('favorite_penguin', penguin_doc),
+...                 mapping_tools.mappers.document.Member('id'))
+>>> goose_doc_mapper = mapping_tools.mappers.document.Mapper(Goose, goose_doc, {
+...     'favorite_penguin':mapping_tools.mappers.document.DocumentProperty(
+...         Penguin, goose_doc.members['favorite_penguin'])
+... })
 
 ```
 ORM using pure SQLAlchemy:
@@ -88,25 +88,44 @@ Map a model to an aggregate table:
 ...     })
 
 ```
-## Encoders
-Mappers can be used by encoders:
+Some mapped domain objects:
 ```
 >>> grace = Goose('grace', Penguin('jerry', 'fat'))
 >>> betty = Goose('betty', Penguin('fred', 'cool'))
 >>> ginger = Goose('ginger', Penguin('larry', 'boring'))
 
 ```
+## Encoders
+Mappers can be used by encoders:
 ```
 >>> import json
->>> JSONEncoder = document.make_JSONEncoder(goose_doc_mapper)
+>>> JSONEncoder = mapping_tools.mappers.document.make_JSONEncoder(
+...     goose_doc_mapper)
 >>> json.dumps(betty, cls=JSONEncoder, sort_keys=True) \
 ... # doctest: +NORMALIZE_WHITESPACE
 '{"favorite_penguin": {"id": null, "mood": "cool", "name": "fred"},
   "id": null, "name": "betty"}'
->>> goose_doc_mapper.load(json.loads(
-...   '{"favorite_penguin": {"mood": "cool", "name": "fred"}, "name": "betty"}'
-... ))
-< betty, the goose that likes < fred the cool penguin > >
+
+```
+The mapping_tools encoder interface:
+```
+>>> import mapping_tools.encoders.json_writer
+>>> encoder = mapping_tools.encoders.json_writer.JSONWriter(goose_doc_mapper)
+>>> with encoder.make_session() as encoder_session:
+...     encoder_session.add_all([betty])
+...     # doctest: +NORMALIZE_WHITESPACE
+...
+[
+  {
+    "favorite_penguin": {
+      "id": null,
+      "mood": "cool",
+      "name": "fred"
+    },
+    "name": "betty",
+    "id": null
+  }
+]
 
 ```
 Table mappings can be used by csv encoders. csv encoder interface is
