@@ -1,11 +1,10 @@
 ```
 pip install git+ssh://git@github.com/natb1/mapping_tools.git
 ```
-...tools for [mapping](http://martinfowler.com/eaaCatalog/dataMapper.html)
- python
+...tools for "mapping" python
 [domain models](http://martinfowler.com/eaaCatalog/domainModel.html). For
 example, this domain model:
-```
+```python
 >>> class Penguin(object):
 ...     def __init__(self, name, mood, id=None):
 ...         self.name = name
@@ -20,175 +19,141 @@ example, this domain model:
 ...         self.favorite_penguin = favorite_penguin
 ...         self.id = id
 ...     def __repr__(self):
-...         return '< %s, the goose that likes %s >' \
-...                % (self.name, repr(self.favorite_penguin))
+...         repr = (self.name, repr(self.favorite_penguin))
+...         return '< %s, the goose that likes %s >' % repr
 ...
 
 ```
+Some domain objects:
+```
+>>> grace = Goose('grace', Penguin('penny', 'fat'))
+>>> gale = Goose('gale', Penguin('prince', 'cool'))
+>>> ginger = Goose('ginger', Penguin('puck', 'boring'))
+
+```
+
 ## Mappers
-An example mapping of the domain to a document:
-```
->>> import mapping_tools.mappers.document
->>> doc_metadata = mapping_tools.mappers.document.MetaData()
->>> penguin_doc = mapping_tools.mappers.document.Document(
-...                   doc_metadata,
-...                   mapping_tools.mappers.document.Member('name'),
-...                   mapping_tools.mappers.document.Member('mood'),
-...                   mapping_tools.mappers.document.Member('id'))
->>> goose_doc = mapping_tools.mappers.document.Document(
-...                 doc_metadata,
-...                 mapping_tools.mappers.document.Member('name'),
-...                 mapping_tools.mappers.document.Member('favorite_penguin', penguin_doc),
-...                 mapping_tools.mappers.document.Member('id'))
->>> goose_doc_mapper = mapping_tools.mappers.document.Mapper(Goose, goose_doc, {
-...     'favorite_penguin':mapping_tools.mappers.document.DocumentProperty(
-...         Penguin, goose_doc.members['favorite_penguin'])
-... })
+Mapper instances define translations between models. They have a factory
+method `map` that takes a `model_type_object` as an argument and returns objects 
+of a different model. 
 
-```
-ORM using pure SQLAlchemy:
-```
->>> import sqlalchemy
->>> import sqlalchemy.orm
->>> from sqlalchemy import Table, Column, Integer, String, ForeignKey
->>> table_metadata = sqlalchemy.MetaData()
->>> penguin_relation = Table('penguins', table_metadata,
-...                          Column('id', Integer, primary_key=True),
-...                          Column('name', String(50)),
-...                          Column('mood', String(50)))
->>> goose_relation = Table('geese', table_metadata,
-...                        Column('id', Integer, primary_key=True),
-...                        Column('name', String(50)),
-...                        Column('favorite_penguin$id', Integer,
-...                            ForeignKey('penguins.id')))
->>> penguin_relational_map = sqlalchemy.orm.mapper(Penguin, penguin_relation)
->>> goose_relational_map = sqlalchemy.orm.mapper(
-...                            Goose, goose_relation, {
-...                            'favorite_penguin':sqlalchemy.orm.relationship(
-...                                Penguin)})
-
-```
-Map a model to an aggregate table:
-```
->>> import mapping_tools.mappers.table
->>> aggregate_metadata = sqlalchemy.MetaData()
->>> goose_aggregate = Table('geese_aggregate', aggregate_metadata,
-...                  Column('id', Integer, primary_key=True),
-...                  Column('name', String(50)),
-...                  Column('favorite_penguin$id', Integer),
-...                  Column('favorite_penguin$name', String(50)),
-...                  Column('favorite_penguin$mood', String(50)))
->>> goose_aggregate_map = mapping_tools.mappers.table.Mapper(
-...     Goose, goose_aggregate, {
-...         'favorite_penguin': mapping_tools.mappers.table.CompositeProperty(
-...             Penguin, {
-...             'name': goose_aggregate.c['favorite_penguin$name'],
-...             'mood': goose_aggregate.c['favorite_penguin$mood'],
-...             'id': goose_aggregate.c['favorite_penguin$id']})
-...     })
-
-```
-Some mapped domain objects:
-```
->>> grace = Goose('grace', Penguin('jerry', 'fat'))
->>> betty = Goose('betty', Penguin('fred', 'cool'))
->>> ginger = Goose('ginger', Penguin('larry', 'boring'))
-
-```
-## Encoders
-Mappers can be used by encoders:
-```
+> #### Magic Mappers
+`mapping_tools` is packaged with a number of "magic" mappers that
+use various heuristics to guess the best mapping.
+`mapping_tools.DictMapper(model_type)` inspects the `model_type` constructor to
+return a mapper instance whose `map` method constructs dict objects:
+```python
+>>> import mapping_tools
 >>> import json
->>> JSONEncoder = mapping_tools.mappers.document.make_JSONEncoder(
-...     goose_doc_mapper)
->>> json.dumps(betty, cls=JSONEncoder, sort_keys=True) \
+>>> goose_dict_mapper = mapping_tools.DictMapper(Goose)
+>>> grace_dict = goose_dict_mapper.map(grace)
+>>> print(json.dumps(grace_dict, indent=2, sorted=True))\
 ... # doctest: +NORMALIZE_WHITESPACE
-'{"favorite_penguin": {"id": null, "mood": "cool", "name": "fred"},
-  "id": null, "name": "betty"}'
-
-```
-The mapping_tools encoder interface:
-```
->>> import mapping_tools.encoders.json_writer
->>> encoder = mapping_tools.encoders.json_writer.JSONWriter(goose_doc_mapper)
->>> with encoder.make_session() as encoder_session:
-...     encoder_session.add_all([betty])
-...     # doctest: +NORMALIZE_WHITESPACE
-...
 [
   {
     "favorite_penguin": {
       "id": null,
-      "mood": "cool",
-      "name": "fred"
+      "mood": "fat",
+      "name": "penny"
     },
-    "name": "betty",
+    "name": "grace",
     "id": null
   }
 ]
 
-```
-Table mappings can be used by csv encoders. csv encoder interface is
-consistent with csv writer from python libs:
-```
->>> import mapping_tools.encoders.csv_writer
->>> writer = mapping_tools.encoders.csv_writer.CSVWriter(
-...     goose_aggregate_map)
->>> writer.writeheader() # doctest: +NORMALIZE_WHITESPACE
-favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
->>> writer.writerows((grace, betty)) # doctest: +NORMALIZE_WHITESPACE
-,fat,jerry,,grace
-,cool,fred,,betty
+>```
+> The `inverse` argument of the `DictMapper` constructor will return an
+instance whose `map` method takes a `dict` argument and initializes a
+`model_type` object:
+```python
+>>> dict_goose_mapper = mapping_tools.DictMapper(Goose, inverse=True)
+>>> dict_goose_mapper.map(grace_dict)
+< grace, the goose that likes < penny the fat penguin > >
 
-```
-Extensions to the csv writer interface implement the mapping_tools encoder
-interface:
-```
->>> with writer.make_session() as session:
-...     session.add_all((grace, betty)) 
-...     # doctest: +NORMALIZE_WHITESPACE
+>```
+> `mapping_tools.AggregateMapper(model_type, aggregate_type)` returns a
+mapper instance that inspects the constructors of the `model_type` and
+`aggregate_type` to guess possible aggregations:
+```python
+>>> class GooseAggregate(object):
+...     def __init__(self, name, favorite_penguin_name, favorite_penguin_mood,
+...                  favorite_penguin_id=None, id=None):
+...         self.name = name
+...         self.favorite_penguin_name = favorite_penguin_name
+...         self.favorite_penguin_mood = favorite_penguin_mood
+...         self.favorite_penguin_id = favorite_penguin_id
+...         self.id = id
+...     def __repr__(self):
+...         repr = (self.name, self.favorite_penguin_mood)
+...         return '< %s the goose has a %s penguin mood >' % repr 
 ...
-favorite_penguin$id,favorite_penguin$mood,favorite_penguin$name,id,name
-,fat,jerry,,grace
-,cool,fred,,betty
+>>> goose_aggregate_mapper = mapping_tools.AggregateMapper(
+...     Goose, GooseAggregate)
+>>> aggregate_goose_mapper = mapping_tools.AggregateMapper(
+...     Goose, GooseAggregate, inverse=True)
+>>> gale_aggregate = goose_aggregate_mapper.map(gale)
+>>> gale_aggregate
+< gale has a cool penguin mood >
+>>> aggregate_goose_mapper(gale_aggregate)
+< gale, the goose that likes < prince the cool penguin > >
+
+>```
+
+Custom translations can be defined using the generic `Mapper`.
+```python
+class mapping_tools.Mapper(model_type, model_prime_type, 
+                           model_property_to_prime_property)
+```  
+... initialize a mapper factory for translating `model` objects to `model_prime` 
+objects. `model_property_to_prime_property` is a
+[`mapping`](https://docs.python.org/2/library/stdtypes.html#mapping-types-dict)
+from model property names to translation functions. Translation functions look
+like:
+```python
+def my_translation_function(**model_property_names_to_values)
+```
+... return a
+[`mapping`](https://docs.python.org/2/library/stdtypes.html#mapping-types-dict)
+of keyword arguments to be passed to the `model_prime_type constructor`. Some 
+common translation functions are packaged with `mapping_tools`.
+> #### Translation Functions
+```python
+mapping_tools.identity(**model_property_names_to_values)
+```
+returns model_property_names_to_values
+```python
+mapping_tools.make_rotation(prime_property_name)
+```
+makes a translation function that returns {prime_property_name:value}
+```python
+mapping_tools.make_projection(value_property_name_to_prime_property_name)
+```
+makes a translation function that returns 
+{prime_property_name:value.value_property_name, ...}
+```python
+mapping_tools.make_constructor(another_prime_type, prime_property_name)
+```
+makes a transation function that returns 
+{prime_property_name:another_prime_type(**model_property_names_to_values)}
+
+For example, mapping to an anonymized domain:
+```python
+>>> tokens = {
+...     'grace':'fred',
+...     'gail':'frank',
+...     'ginger':'frankenstein'
+... }
+>>> def tokenize_values(**model_property_names_to_values):
+...     nv_items = model_property_names_to_values.items()
+...     tokenized = dict(name, tokens[value] for name, value in nv_items)
+...     return tokenized
+>>> tokenizer = mapping_tools.Mapper(Goose, Goose, {
+...     'name':tokenize_values,
+...     ('favorite_penguin', 'id'):mapping_tools.identity})
+>>> anonymous_goose = tokenizer.map(ginger)
+>>> anonymous_goose
+< frankenstein, the goose that likes < puck the boring penguin > >
 
 ```
-## Repositories
-Repositories are encoders that also implement persistance and querying
-strategies:
-```
-#TODO
->>> from sqlalchemy import create_engine
->>> from sqlalchemy.orm import sessionmaker
->>> engine = create_engine('sqlite:///:memory:')
->>> 
->>> table_metadata.create_all(engine)
->>> session = sessionmaker(bind=engine)()
->>> session.add(Goose('betty', Penguin('fred', 'cool')))
->>> session.commit()
->>> session.query(Goose).join(Penguin).filter(Penguin.name=='fred').one()
-< betty, the goose that likes < fred the cool penguin > >
 
-```
-```
-#TODO
->>> aggregate_metadata.create_all(engine)
->>> from sqlalchemy.sql import select
->>> r = engine.execute(goose_aggregate_map.table.insert(), 
-...                    **goose_aggregate_map.dump(grace))
->>> sorted((k,v) for k,v in r.last_inserted_params().items())\
-... # doctest: +NORMALIZE_WHITESPACE
-[('favorite_penguin$id', None), ('favorite_penguin$mood', 'fat'),
-('favorite_penguin$name', 'jerry'), ('id', None), ('name', 'grace')]
->>> select_jerry = select([goose_aggregate])\
-...                    .where(goose_aggregate.c['favorite_penguin$name']=='jerry')
->>> goose_aggregate_map.load(engine.execute(select_jerry).first())
-< grace, the goose that likes < jerry the fat penguin > >
 
-```
-TODO:
-- other repositories
-- mapping to other domains
-- mappings to other document schemas (json-schema.org)
-- xml encoder (xmltodict)
-- sqla query subclass that chooses best mapper
