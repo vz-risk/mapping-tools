@@ -38,7 +38,7 @@ of a different model.
 > #### Magic Mappers
 `mapping_tools` is packaged with a number of "magic" mappers that
 use various heuristics to guess the best mapping.
-`mapping_tools.DictMapper(model_type)` inspects the `model_type` constructor to
+`mapping_tools.DictMapper(ModelType)` inspects the `ModelType` constructor to
 return a mapper instance whose `map` method constructs dict objects:
 ```python
 >>> import mapping_tools
@@ -47,30 +47,28 @@ return a mapper instance whose `map` method constructs dict objects:
 >>> grace_dict = goose_dict_mapper.map(grace)
 >>> print(json.dumps(grace_dict, indent=2, sorted=True))\
 ... # doctest: +NORMALIZE_WHITESPACE
-[
-  {
-    "favorite_penguin": {
-      "id": null,
-      "mood": "fat",
-      "name": "penny"
-    },
-    "name": "grace",
-    "id": null
-  }
-]
+{
+  "favorite_penguin": {
+    "id": null,
+    "mood": "fat",
+    "name": "penny"
+  },
+  "name": "grace",
+  "id": null
+}
 
 >```
 > The `inverse` argument of the `DictMapper` constructor will return an
 instance whose `map` method takes a `dict` argument and initializes a
-`model_type` object:
+`ModelType` object:
 ```python
 >>> dict_goose_mapper = mapping_tools.DictMapper(Goose, inverse=True)
 >>> dict_goose_mapper.map(grace_dict)
 < grace, the goose that likes < penny the fat penguin > >
 
 >```
-> `mapping_tools.AggregateMapper(model_type, aggregate_type)` returns a
-mapper instance that inspects the constructors of the `model_type` and
+> `mapping_tools.AggregateMapper(ModelType, aggregate_type)` returns a
+mapper instance that inspects the constructors of the `ModelType` and
 `aggregate_type` to guess possible aggregations:
 ```python
 >>> class GooseAggregate(object):
@@ -99,24 +97,23 @@ mapper instance that inspects the constructors of the `model_type` and
 
 Custom translations can be defined using the generic `Mapper`.
 ```python
-class mapping_tools.Mapper(model_type, model_prime_type, 
-                           model_property_to_prime_property)
+class mapping_tools.Mapper(ModelPrimeType, model_properties_to_translation)
 ```  
 ... initialize a mapper for translating `model` objects to `model_prime` 
-objects. `model_property_to_prime_property` is a
+objects. `model_properties_to_translation` is a
 [`mapping`](https://docs.python.org/2/library/stdtypes.html#mapping-types-dict)
 from model property names to translation functions. Translation functions look
 like:
 ```python
-def my_translation_function(**model_property_names_to_values)
+def my_translation_function(model_property_names_to_values)
 ```
 ... return a
 [`mapping`](https://docs.python.org/2/library/stdtypes.html#mapping-types-dict)
-of keyword arguments to be passed to the `model_prime_type` constructor. Some 
+of keyword arguments to be passed to the `ModelPrimeType` constructor. Some 
 common translation functions are packaged with `mapping_tools`.
 > #### Translation Functions
 ```python
-mapping_tools.identity(**model_property_names_to_values)
+mapping_tools.identity(model_property_names_to_values)
 ```
 returns model_property_names_to_values
 ```python
@@ -141,11 +138,11 @@ For example, mapping to an anonymized domain:
 ...     'gail':'frank',
 ...     'ginger':'frankenstein'
 ... }
->>> def tokenize_values(**model_property_names_to_values):
+>>> def tokenize_values(model_property_names_to_values):
 ...     nv_items = model_property_names_to_values.items()
-...     tokenized = dict(name, tokens[value] for name, value in nv_items)
+...     tokenized = dict((name, tokens[value]) for name, value in nv_items)
 ...     return tokenized
->>> tokenizer = mapping_tools.Mapper(Goose, Goose, {
+>>> tokenizer = mapping_tools.Mapper(Goose, {
 ...     'name':tokenize_values,
 ...     ('favorite_penguin', 'id'):mapping_tools.identity})
 >>> anonymous_goose = tokenizer.map(ginger)
@@ -153,5 +150,4 @@ For example, mapping to an anonymized domain:
 < frankenstein, the goose that likes < puck the boring penguin > >
 
 ```
-
 
