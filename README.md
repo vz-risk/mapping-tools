@@ -17,8 +17,8 @@ pip install git+ssh://git@github.com/natb1/mapping_tools.git
 ...         self.favorite_penguin = favorite_penguin
 ...         self.id = id
 ...     def __repr__(self):
-...         repr = (self.name, repr(self.favorite_penguin))
-...         return '< %s, the goose that likes %s >' % repr
+...         template = '< %s, the goose that likes %s >'
+...         return template % (self.name, repr(self.favorite_penguin))
 ...
 
 ```
@@ -82,8 +82,8 @@ mapper instance that inspects the constructors of the `model_type` and
 ...         self.favorite_penguin_id = favorite_penguin_id
 ...         self.id = id
 ...     def __repr__(self):
-...         repr = (self.name, self.favorite_penguin_mood)
-...         return '< %s the goose has a %s penguin mood >' % repr 
+...         template = '< %s the goose has a %s penguin mood >' 
+...         return template % (self.name, self.favorite_penguin_mood)
 ...
 >>> goose_aggregate_mapper = mapping_tools.AggregateMapper(
 ...     Goose, GooseAggregate)
@@ -102,7 +102,7 @@ Custom translations can be defined using the generic `Mapper`.
 class mapping_tools.Mapper(model_type, model_prime_type, 
                            model_property_to_prime_property)
 ```  
-... initialize a mapper factory for translating `model` objects to `model_prime` 
+... initialize a mapper for translating `model` objects to `model_prime` 
 objects. `model_property_to_prime_property` is a
 [`mapping`](https://docs.python.org/2/library/stdtypes.html#mapping-types-dict)
 from model property names to translation functions. Translation functions look
