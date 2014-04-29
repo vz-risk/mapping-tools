@@ -32,7 +32,7 @@ Some model objects:
 
 ## Mappers
 Mapper instances define translations between models. They have a factory
-method `map` that takes a `model_type_object` as an argument and returns objects 
+method `map` that takes a model object as an argument and returns objects 
 of a different model. 
 
 > #### Magic Mappers
