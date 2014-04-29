@@ -142,11 +142,10 @@ For example, mapping to an anonymized domain:
 ...     nv_items = model_property_names_to_values.items()
 ...     tokenized = dict((name, tokens[value]) for name, value in nv_items)
 ...     return tokenized
->>> tokenizer = mapping_tools.Mapper(Goose, {
+>>> anonymizer = mapping_tools.Mapper(Goose, {
 ...     'name':tokenize_values,
 ...     ('favorite_penguin', 'id'):mapping_tools.identity})
->>> anonymous_goose = tokenizer.map(ginger)
->>> anonymous_goose
+>>> anonymizer.map(ginger)
 < frankenstein, the goose that likes < puck the boring penguin > >
 
 ```
