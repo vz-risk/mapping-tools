@@ -1,4 +1,4 @@
-class Mapper:
+class Mapper(object):
     
     def __init__(self, ModelPrimeType, 
                  model_properties_to_translation):

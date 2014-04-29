@@ -53,8 +53,8 @@ return a mapper instance whose `map` method constructs dict objects:
     "mood": "fat",
     "name": "penny"
   },
-  "name": "grace",
   "id": null
+  "name": "grace",
 }
 
 >```
