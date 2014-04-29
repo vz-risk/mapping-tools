@@ -23,7 +23,7 @@ pip install git+ssh://git@github.com/natb1/mapping_tools.git
 
 ```
 Some model objects:
-```
+```python
 >>> grace = Goose('grace', Penguin('penny', 'fat'))
 >>> gale = Goose('gale', Penguin('prince', 'cool'))
 >>> ginger = Goose('ginger', Penguin('puck', 'boring'))
