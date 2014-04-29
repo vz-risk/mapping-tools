@@ -1,9 +1,7 @@
 ```
 pip install git+ssh://git@github.com/natb1/mapping_tools.git
 ```
-...tools for "mapping" python
-[domain models](http://martinfowler.com/eaaCatalog/domainModel.html). For
-example, this domain model:
+...tools for "mapping" python models. For example, this model:
 ```python
 >>> class Penguin(object):
 ...     def __init__(self, name, mood, id=None):
@@ -24,7 +22,7 @@ example, this domain model:
 ...
 
 ```
-Some domain objects:
+Some model objects:
 ```
 >>> grace = Goose('grace', Penguin('penny', 'fat'))
 >>> gale = Goose('gale', Penguin('prince', 'cool'))
@@ -114,7 +112,7 @@ def my_translation_function(**model_property_names_to_values)
 ```
 ... return a
 [`mapping`](https://docs.python.org/2/library/stdtypes.html#mapping-types-dict)
-of keyword arguments to be passed to the `model_prime_type constructor`. Some 
+of keyword arguments to be passed to the `model_prime_type` constructor. Some 
 common translation functions are packaged with `mapping_tools`.
 > #### Translation Functions
 ```python
