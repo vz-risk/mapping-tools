@@ -1,8 +1,7 @@
-import inspect
 import types
 
+import heuristics
 import mapper
-import translations
 
 class DictMapper(mapper.Mapper):
 
@@ -13,21 +12,15 @@ class DictMapper(mapper.Mapper):
 
     def __init__(self, ModelType):
         model_properties_to_translation = {
-            self._inspect_properties(ModelType):self._make_dict}
+            heuristics.properties(ModelType):self._make_dict}
         super(DictMapper, self).__init__(dict, model_properties_to_translation)
 
     @staticmethod
-    def _inspect_properties(ModelType):
-        args = set(inspect.getargspec(ModelType.__init__).args)
-        properties = tuple(args - set(('self',)))
-        return properties
-
-    @staticmethod
-    def _make_dict(model_property_names_to_values):
+    def _make_dict(model_properties_to_values):
         #TODO: some of this logic could be handled by the base Mapper for
         #more natural handling of nested types
         kwargs = {}
-        for prop, value in model_property_names_to_values.items():
+        for prop, value in model_properties_to_values.items():
             if isinstance(value, DictMapper.primitive_types): 
                 kwargs[prop] = value
             else:
@@ -36,7 +29,7 @@ class DictMapper(mapper.Mapper):
 
     @staticmethod
     def _make_nested_dict(obj):
-        properties = DictMapper._inspect_properties(type(obj))
+        properties = heuristics.properties(type(obj))
         p_to_v = mapper.Mapper._map_properties_to_values(properties, obj)
         nested_dict = DictMapper._make_dict(p_to_v)
         return nested_dict

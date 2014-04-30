@@ -32,8 +32,8 @@ Some model objects:
 
 ## Mappers
 Mapper instances define translations between models. They have a factory
-method `map` that takes a model object as an argument and returns objects 
-of a different model. 
+method `map` that takes a `ModelType` object as an argument and initializes and
+returns an object of `ModelPrimeType`.
 
 > #### Magic Mappers
 `mapping_tools` is packaged with a number of "magic" mappers that
@@ -58,12 +58,14 @@ return a mapper instance whose `map` method constructs dict objects:
 }
 
 >```
-> The `inverse` argument of the `DictMapper` constructor will return an
-instance whose `map` method takes a `dict` argument and initializes a
-`ModelType` object:
+>`mapping_tools.DictSchema(ModelPrimeType, keys_to_schema={})`
+is a mapper with a map method that takes a `dict` and returns a
+`ModelPrimeType`.
 ```python
->>> dict_goose_mapper = mapping_tools.DictMapper(Goose, inverse=True)
->>> dict_goose_mapper.map(grace_dict)
+>>> dict_penguin_schema = mapping_tools.DictSchema(Penguin)
+>>> dict_goose_schema = mapping_tools.DictSchema(
+...     Goose, {'favorite_penguin':dict_penguin_schema})
+>>> dict_goose_schema.map(grace_dict)
 < grace, the goose that likes < penny the fat penguin > >
 
 >```
@@ -105,7 +107,7 @@ objects. `model_properties_to_translation` is a
 from model property names to translation functions. Translation functions look
 like:
 ```python
-def my_translation_function(model_property_names_to_values)
+def my_translation_function(model_properties_to_values)
 ```
 ... return a
 [`mapping`](https://docs.python.org/2/library/stdtypes.html#mapping-types-dict)
@@ -113,9 +115,9 @@ of keyword arguments to be passed to the `ModelPrimeType` constructor. Some
 common translation functions are packaged with `mapping_tools`.
 > #### Translation Functions
 ```python
-mapping_tools.identity(model_property_names_to_values)
+mapping_tools.identity(model_properties_to_values)
 ```
-returns model_property_names_to_values
+returns model_properties_to_values
 ```python
 mapping_tools.make_rotation(prime_property_name)
 ```
@@ -129,7 +131,7 @@ makes a translation function that returns
 mapping_tools.make_constructor(another_prime_type, prime_property_name)
 ```
 makes a transation function that returns 
-{prime_property_name:another_prime_type(**model_property_names_to_values)}
+{prime_property_name:another_prime_type(**model_properties_to_values)}
 
 For example, mapping to an anonymized domain:
 ```python
@@ -138,9 +140,10 @@ For example, mapping to an anonymized domain:
 ...     'gail':'frank',
 ...     'ginger':'frankenstein'
 ... }
->>> def tokenize_values(model_property_names_to_values):
-...     nv_items = model_property_names_to_values.items()
-...     tokenized = dict((name, tokens[value]) for name, value in nv_items)
+>>> def tokenize_values(model_properties_to_values):
+...     tokenized = dict(
+...         (name, tokens[value])
+...         for name, value in model_properties_to_values.items())
 ...     return tokenized
 >>> anonymizer = mapping_tools.Mapper(Goose, {
 ...     'name':tokenize_values,
