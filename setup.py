@@ -17,6 +17,7 @@ setup(
     ],
     keywords='development',
     packages=['mapping_tools'],
-    install_requires=['sqlalchemy', #TODO: limited feature set w/o sqla
-                      'mock'],
+    install_requires=[
+        'mock', #TODO: make optional - only required for testing
+                     ],
 )
