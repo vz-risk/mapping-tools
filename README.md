@@ -45,7 +45,7 @@ return a mapper instance whose `map` method constructs dict objects:
 >>> import json
 >>> goose_dict_mapper = mapping_tools.DictMapper(Goose)
 >>> grace_dict = goose_dict_mapper.map(grace)
->>> print(json.dumps(grace_dict, indent=2, sorted=True))\
+>>> print(json.dumps(grace_dict, indent=2, sort_keys=True))\
 ... # doctest: +NORMALIZE_WHITESPACE
 {
   "favorite_penguin": {
@@ -53,8 +53,8 @@ return a mapper instance whose `map` method constructs dict objects:
     "mood": "fat",
     "name": "penny"
   },
-  "id": null
-  "name": "grace",
+  "id": null,
+  "name": "grace"
 }
 
 >```
@@ -67,33 +67,6 @@ is a mapper with a map method that takes a `dict` and returns a
 ...     Goose, {'favorite_penguin':dict_penguin_schema})
 >>> dict_goose_schema.map(grace_dict)
 < grace, the goose that likes < penny the fat penguin > >
-
->```
-> `mapping_tools.AggregateMapper(ModelType, aggregate_type)` returns a
-mapper instance that inspects the constructors of the `ModelType` and
-`aggregate_type` to guess possible aggregations:
-```python
->>> class GooseAggregate(object):
-...     def __init__(self, name, favorite_penguin_name, favorite_penguin_mood,
-...                  favorite_penguin_id=None, id=None):
-...         self.name = name
-...         self.favorite_penguin_name = favorite_penguin_name
-...         self.favorite_penguin_mood = favorite_penguin_mood
-...         self.favorite_penguin_id = favorite_penguin_id
-...         self.id = id
-...     def __repr__(self):
-...         template = '< %s the goose has a %s penguin mood >' 
-...         return template % (self.name, self.favorite_penguin_mood)
-...
->>> goose_aggregate_mapper = mapping_tools.AggregateMapper(
-...     Goose, GooseAggregate)
->>> aggregate_goose_mapper = mapping_tools.AggregateMapper(
-...     Goose, GooseAggregate, inverse=True)
->>> gale_aggregate = goose_aggregate_mapper.map(gale)
->>> gale_aggregate
-< gale has a cool penguin mood >
->>> aggregate_goose_mapper(gale_aggregate)
-< gale, the goose that likes < prince the cool penguin > >
 
 >```
 
@@ -128,10 +101,11 @@ mapping_tools.make_projection(value_property_name_to_prime_property_name)
 makes a translation function that returns 
 {prime_property_name:value.value_property_name, ...}
 ```python
-mapping_tools.make_constructor(another_prime_type, prime_property_name)
+mapping_tools.make_constructor(AnotherPrimeType, prefix, seperator='_')
 ```
-makes a transation function that returns 
-{prime_property_name:another_prime_type(**model_properties_to_values)}
+makes a tranlsation function that constructs `AnotherPrimeType` from
+`model_properties_to_values`. Model properties are assumed to be prefixed with
+`prefix`+`seperator`.
 
 For example, mapping to an anonymized domain:
 ```python
@@ -152,4 +126,29 @@ For example, mapping to an anonymized domain:
 < frankenstein, the goose that likes < puck the boring penguin > >
 
 ```
+A mapping from an aggregate schema:
+```python
+>>> penguin_properties = ('favorite_penguin_name', 'favorite_penguin_mood',
+...                       'favorite_penguin_id')
+>>> aggregate_goose_schema = mapping_tools.Mapper(Goose, {
+...     ('name', 'id'):mapping_tools.identity,
+...     penguin_properties:mapping_tools.make_constructor(
+...         Penguin, 'favorite_penguin')})
+>>> class GooseAggregate(object):
+...     def __init__(self, name, favorite_penguin_name, favorite_penguin_mood,
+...                  favorite_penguin_id=None, id=None):
+...         self.name = name
+...         self.favorite_penguin_name = favorite_penguin_name
+...         self.favorite_penguin_mood = favorite_penguin_mood
+...         self.favorite_penguin_id = favorite_penguin_id
+...         self.id = id
+...     def __repr__(self):
+...         template = '< %s the goose has a %s penguin mood >' 
+...         return template % (self.name, self.favorite_penguin_mood)
+...
+>>> gale_aggregate = GooseAggregate('gale', 'prince', 'cool')
+>>> aggregate_goose_schema.map(gale_aggregate)
+< gale, the goose that likes < prince the cool penguin > >
+
+>```
 
