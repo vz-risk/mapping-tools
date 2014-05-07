@@ -96,10 +96,10 @@ mapping_tools.make_rotation(prime_property_name)
 ```
 makes a translation function that returns {prime_property_name:value}
 ```python
-mapping_tools.make_projection(value_property_name_to_prime_property_name)
+mapping_tools.make_projection(ValueType, seperator='_')
 ```
 makes a translation function that returns 
-{prime_property_name:value.value_property_name, ...}
+{model_property+seperator+value_property:value.value_property, ...}
 ```python
 mapping_tools.make_constructor(AnotherPrimeType, prefix, seperator='_')
 ```
@@ -126,14 +126,8 @@ For example, mapping to an anonymized domain:
 < frankenstein, the goose that likes < puck the boring penguin > >
 
 ```
-A mapping from an aggregate schema:
+A mapping to an aggregate schema:
 ```python
->>> penguin_properties = ('favorite_penguin_name', 'favorite_penguin_mood',
-...                       'favorite_penguin_id')
->>> aggregate_goose_schema = mapping_tools.Mapper(Goose, {
-...     ('name', 'id'):mapping_tools.identity,
-...     penguin_properties:mapping_tools.make_constructor(
-...         Penguin, 'favorite_penguin')})
 >>> class GooseAggregate(object):
 ...     def __init__(self, name, favorite_penguin_name, favorite_penguin_mood,
 ...                  favorite_penguin_id=None, id=None):
@@ -146,7 +140,18 @@ A mapping from an aggregate schema:
 ...         template = '< %s the goose has a %s penguin mood >' 
 ...         return template % (self.name, self.favorite_penguin_mood)
 ...
->>> gale_aggregate = GooseAggregate('gale', 'prince', 'cool')
+>>> goose_aggregate_map = mapping_tools.Mapper(GooseAggregate, {
+...     ('name', 'id'):mapping_tools.identity,
+...     'favorite_penguin':mapping_tools.make_projection(Penguin)})
+>>> gale_aggregate = goose_aggregate_map.map(gale)
+>>> gale_aggregate
+< gale the goose has a cool penguin mood >
+>>> penguin_properties = ('favorite_penguin_name', 'favorite_penguin_mood',
+...                       'favorite_penguin_id')
+>>> aggregate_goose_schema = mapping_tools.Mapper(Goose, {
+...     ('name', 'id'):mapping_tools.identity,
+...     penguin_properties:mapping_tools.make_constructor(
+...         Penguin, 'favorite_penguin')})
 >>> aggregate_goose_schema.map(gale_aggregate)
 < gale, the goose that likes < prince the cool penguin > >
 
