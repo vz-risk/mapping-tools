@@ -150,5 +150,5 @@ A mapping from an aggregate schema:
 >>> aggregate_goose_schema.map(gale_aggregate)
 < gale, the goose that likes < prince the cool penguin > >
 
->```
+```
 
