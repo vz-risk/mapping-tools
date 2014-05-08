@@ -13,7 +13,7 @@ for requirement in github_requirements:
 setup(
     name='mapping_tools',
     description='tools for mapping domain models',
-    #long_description=open('README.md').read(),
+    long_description=open('README.md').read(),
     url='https://github.com/natb1/mapping_tools',
     author='Nathan Buesgens',
     author_email='nathan@natb1.com',
