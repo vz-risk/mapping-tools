@@ -10,3 +10,4 @@ DictSchema = dict_schema.DictSchema
 identity = translations.identity
 make_constructor = translations.make_constructor
 make_projection = translations.make_projection
+make_rotation = translations.make_rotation

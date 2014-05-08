@@ -35,3 +35,13 @@ def _get_projection_args_from_model_properties(
     kwargs = dict((prop+seperator+value_prop, getattr(value, value_prop))
                   for value_prop in value_properties)
     return kwargs
+
+def make_rotation(prime_property_name):
+    translation = lambda p_to_v: _get_rotation_args(
+        p_to_v, prime_property_name)
+    return translation
+
+def _get_rotation_args(model_properties_to_values, prime_property_name):
+    #TODO: how to handle multiple model properties?
+    prop, value = model_properties_to_values.items()[0]
+    return {prime_property_name:value}
