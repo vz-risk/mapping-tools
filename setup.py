@@ -1,15 +1,5 @@
 from setuptools import setup
 
-# TODO: with dependency_links deprecated, pip will no longer auto-install
-# github requirements using setup.py one liner. instead: hack it
-# (alternative: pip install -r ...)
-import subprocess
-github_requirements = [
-    'git+https://github.com/natb1/test_data.git#egg=test-data'
-]
-for requirement in github_requirements:
-    subprocess.check_call(('pip', 'install', requirement))
-
 setup(
     name='mapping_tools',
     description='tools for mapping domain models',

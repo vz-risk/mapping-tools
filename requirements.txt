@@ -1,0 +1,2 @@
+git+https://github.com/natb1/mapping_tools.git#egg=mapping-tools
+git+https://github.com/natb1/test_data.git#egg=test-data
