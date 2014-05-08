@@ -1,5 +1,6 @@
 ```
-pip install git+ssh://git@github.com/natb1/mapping_tools.git
+$ wget https://raw.githubusercontent.com/natb1/mapping_tools/master/requirements.txt
+$ pip install -r requirements.txt
 ```
 ...tools for "mapping" python models. For example, this model:
 ```python
