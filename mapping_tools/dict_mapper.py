@@ -1,4 +1,5 @@
 import types
+import datetime
 
 import heuristics
 import mapper
@@ -8,9 +9,10 @@ class DictMapper(mapper.Mapper):
     primitive_types = (types.BooleanType, types.DictType, types.DictionaryType,
                        types.FloatType, types.IntType, types.LongType,
                        types.NoneType, types.StringType, types.StringTypes,
-                       types.UnicodeType)
+                       types.UnicodeType, datetime.datetime)
 
     def __init__(self, ModelType):
+        self.ModelType = ModelType
         model_properties_to_translation = {
             heuristics.properties(ModelType):self._make_dict}
         super(DictMapper, self).__init__(dict, model_properties_to_translation)
