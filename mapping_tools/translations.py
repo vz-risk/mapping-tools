@@ -3,23 +3,29 @@ import heuristics
 def identity(model_properties_to_values):
     return model_properties_to_values
 
-def make_constructor(AnotherPrimeType, prefix, seperator='_'):
+def make_constructor(AnotherPrimeType, prefix, rotations={}, seperator='_'):
+    #TODO: "roations" is a hack. There should be some sort of nested mapper
     translate = lambda p_to_v: _make_AnotherPrimeType(
-        AnotherPrimeType, p_to_v, prefix, seperator)
+        AnotherPrimeType, p_to_v, prefix, rotations, seperator)
     return translate
 
 def _make_AnotherPrimeType(AnotherPrimeType, model_properties_to_values,
-                           prefix, seperator):
+                           prefix, rotations, seperator):
     prime_args = _get_AnotherPrimeType_args_from_model_properties(
-        model_properties_to_values, prefix, seperator)
+        model_properties_to_values, prefix, rotations, seperator)
     prime = AnotherPrimeType(**prime_args)
     return {prefix:prime}
 
 def _get_AnotherPrimeType_args_from_model_properties(
-        model_properties_to_values, prefix, seperator):
+        model_properties_to_values, prefix, rotations, seperator):
     len_prefix = len(prefix+seperator)
-    kwargs = dict((prop[len_prefix:], value)
-                  for prop, value in model_properties_to_values.items())
+    #kwargs = dict((prop[len_prefix:], value)
+    #              for prop, value in model_properties_to_values.items())
+    kwargs = {}
+    for prop, value in model_properties_to_values.items():
+        prime_prop = rotations[prop] \
+                     if prop in rotations else prop[len_prefix:]
+        kwargs[prime_prop] = value
     return kwargs
 
 def make_projection(ValueType, seperator='_'):

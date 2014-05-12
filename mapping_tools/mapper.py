@@ -5,7 +5,6 @@ class Mapper(object):
         self.ModelPrimeType = ModelPrimeType
         self.model_properties_to_translation = model_properties_to_translation
 
-
     def map(self, model_object):
         return self.ModelPrimeType(**self._translate_kwargs(model_object))
 
