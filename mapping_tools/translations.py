@@ -37,10 +37,14 @@ def make_projection(ValueType, seperator='_'):
 def _get_projection_args_from_model_properties(
         model_properties_to_values, value_properties, seperator):
     #TODO: how to handle multiple model properties?
-    prop, value = model_properties_to_values.items()[0]
-    kwargs = dict((prop+seperator+value_prop, getattr(value, value_prop))
-                  for value_prop in value_properties)
-    return kwargs
+    p_to_v_items = model_properties_to_values.items()
+    if len(p_to_v_items) > 0:
+        prop, value = p_to_v_items[0]
+        kwargs = dict((prop+seperator+value_prop, getattr(value, value_prop))
+                      for value_prop in value_properties)
+        return kwargs
+    else:
+        return {}
 
 def make_rotation(prime_property_name):
     translation = lambda p_to_v: _get_rotation_args(
@@ -49,5 +53,22 @@ def make_rotation(prime_property_name):
 
 def _get_rotation_args(model_properties_to_values, prime_property_name):
     #TODO: how to handle multiple model properties?
-    prop, value = model_properties_to_values.items()[0]
-    return {prime_property_name:value}
+    p_to_v_items = model_properties_to_values.items()
+    if len(p_to_v_items) > 0:
+        prop, value = p_to_v_items[0]
+        return {prime_property_name:value}
+    else:
+        return {}
+
+def make_map(mapper):
+    translation = lambda p_to_v: _get_mapped_value(p_to_v, mapper)
+    return translation
+
+def _get_mapped_value(model_properties_to_values, mapper):
+    #TODO: how to handle multiple model properties?
+    p_to_v_items = model_properties_to_values.items()
+    if len(p_to_v_items) > 0:
+        prop, value = p_to_v_items[0]
+        return {prop:mapper.map(value)}
+    else:
+        return {}
