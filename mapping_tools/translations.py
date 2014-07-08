@@ -38,10 +38,16 @@ def _get_projection_args_from_model_properties(
         model_properties_to_values, value_properties, seperator):
     #TODO: how to handle multiple model properties?
     p_to_v_items = model_properties_to_values.items()
-    if len(p_to_v_items) > 0:
+    if len(p_to_v_items) > 0: #TODO: what condition is this testing?
         prop, value = p_to_v_items[0]
-        kwargs = dict((prop+seperator+value_prop, getattr(value, value_prop))
-                      for value_prop in value_properties)
+        kwargs = None
+        if value is None: # all projected values are None
+            kwargs = dict((prop+seperator+value_prop, None)
+                          for value_prop in value_properties)
+        else:
+            kwargs = dict(
+                (prop+seperator+value_prop, getattr(value, value_prop))
+                for value_prop in value_properties)
         return kwargs
     else:
         return {}
