@@ -5,10 +5,11 @@ import translations
 class DictSchema(mapper.Mapper):
 
     def __init__(self, ModelPrimeType, keys_to_schema={}):
+        self.keys_to_schema = keys_to_schema
         model_properties_to_translation =\
             self._make_translations_for_properties(ModelPrimeType)
-        model_properties_to_translation.update(
-            self._make_translations_for_schema(keys_to_schema))
+        model_properties_to_translation[tuple(keys_to_schema.keys())] =\
+            self._translate_with_schema
         super(DictSchema, self).__init__(
             ModelPrimeType, model_properties_to_translation)
 
@@ -19,24 +20,20 @@ class DictSchema(mapper.Mapper):
             model_properties_to_translation[prop] = translations.identity
         return model_properties_to_translation
 
-    @staticmethod
-    def _make_translations_for_schema(keys_to_schema):
-        model_properties_to_translation = {}
-        for key, schema in keys_to_schema.items():
-            model_properties_to_translation[key] =\
-                lambda ptov: DictSchema._translate_with_schema(ptov, schema)
-        return model_properties_to_translation
-
-    @staticmethod
-    def _translate_with_schema(model_properties_to_values, schema):
-        first_property, first_value = model_properties_to_values.items()[0]
-        kwargs = {first_property:schema.map(first_value)}
+    def _translate_with_schema(self, model_properties_to_values):
+        kwargs = {}
+        for prop, value in model_properties_to_values.items():
+            schema = self.keys_to_schema[prop]
+            kwargs[prop] = schema.map(value)
         return kwargs
 
     def map(self, dict_object):
-        return super(DictSchema, self).map(DictObjectAdaptor(dict_object))
+        model_object = None 
+        if dict_object is not None:
+            model_object = DictObjectAdaptor(dict_object)
+        return super(DictSchema, self).map(model_object)
 
-class DictObjectAdaptor:
+class DictObjectAdaptor(object):
 
     def __init__(self, dict_object):
         self.dict_object = dict_object
@@ -46,3 +43,6 @@ class DictObjectAdaptor:
 
     def __stattr__(self, attr, value):
         self.dict_object[attr] = value
+
+    def __repr__(self):
+        return str(self.dict_object)

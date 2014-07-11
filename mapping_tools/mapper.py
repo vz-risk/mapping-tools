@@ -7,7 +7,7 @@ class Mapper(object):
 
     def map(self, model_object):
         if model_object is None:
-            return None #TODO: is this the desired behavior
+            return None 
             # this prevents the constructor of the ModelPrime type
             # from beign called with null args when the ModelType is None
             # instead, None objects always map to None
