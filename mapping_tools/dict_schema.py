@@ -13,11 +13,11 @@ class DictSchema(mapper.Mapper):
         super(DictSchema, self).__init__(
             ModelPrimeType, model_properties_to_translation)
 
-    @staticmethod
-    def _make_translations_for_properties(ModelPrimeType):
+    def _make_translations_for_properties(self, ModelPrimeType):
         model_properties_to_translation = {}
         for prop in heuristics.properties(ModelPrimeType):
-            model_properties_to_translation[prop] = translations.identity
+            if prop not in self.keys_to_schema:
+                model_properties_to_translation[prop] = translations.identity
         return model_properties_to_translation
 
     def _translate_with_schema(self, model_properties_to_values):
