@@ -9,7 +9,7 @@ class DictMapper(mapper.Mapper):
     primitive_types = (types.BooleanType, types.DictType, types.DictionaryType,
                        types.FloatType, types.IntType, types.LongType,
                        types.NoneType, types.StringType, types.StringTypes,
-                       types.UnicodeType, datetime.datetime)
+                       types.UnicodeType, types.ListType, datetime.datetime)
 
     def __init__(self, ModelType):
         self.ModelType = ModelType
