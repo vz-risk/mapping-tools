@@ -1,2 +1,5 @@
-git+https://github.com/natb1/mapping_tools.git#egg=mapping-tools
-git+https://github.com/natb1/test_data.git#egg=test-data
+# From iocdb_prov@iocdb-staging/staged-repos
+git+ssh://iocdb_prov@iocdb-staging/staged-repos/mapping_tools.git#egg=mapping-tools
+# From github
+#git+https://github.com/natb1/mapping_tools.git#egg=mapping-tools
+#Doesn't exist -> git+https://github.com/natb1/test_data.git#egg=test-data
